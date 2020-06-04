@@ -1,0 +1,34 @@
+
+trigger input Port to teensy Port mapping -> PORT_B_PINS = GPIOB_PDIR
+trigger in | teensy trigger in PIN | teensy port bit
+1 | 16 | 0
+2 | 17 | 1
+
+trigger output Port to teensy Port mapping -> PORT_C_PINS = GPIOC_PDOR
+trigger out | teensy trigger out PIN | teensy port bit
+1 | 12 | 8
+2 | 11 | 7
+3 | 10 | 5
+4 | 9  | 4
+5 | 23 | 3
+6 | 22 | 2
+7 | 15 | 1
+8 | 13 | 6
+
+triggerPort to LED mapping -> PORT_D_PINS = GPIOD_PDOR
+led out | teensy LED PIN | teensy port bit
+1 | 5  | 8
+2 | 21 | 7
+3 | 6  | 5
+4 | 8  | 4
+5 | 7  | 3
+6 | 14 | 2
+7 | 2  | 1
+8 | 20 | 6
+
+
+
+this is how we set, clear and toggle trigger ports
+triggerPort |= (1UL << 1-1); // set 0st bit = first port
+triggerPort &= ~(1UL << 3-1); // clear 2nd bit = third port
+triggerPort ^= (1UL << 5-1); // toggle 4th bit = 5th port

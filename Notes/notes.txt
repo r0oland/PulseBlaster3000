@@ -1,0 +1,2 @@
+- formerly known as Chen Trigger
+- own firmware now with custom matlab libary as well
