@@ -1,4 +1,4 @@
-CT = CascadeTriggerChen();
+CT = PulseBlaster();
 
 % NOTE all values must be positive integers,uint32 integers, i.e. allowed range
 % is 0 to 4,294,967,295

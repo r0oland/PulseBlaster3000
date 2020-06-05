@@ -1,9 +1,9 @@
 p = genpath('D:\CHEN\CascadeTrigger - Joe\');
 addpath(p);
 
-CT = CascadeTriggerChen();% initialize the trigger device
+CT = PulseBlaster();% initialize the trigger device
                            % if the device couldn't be connected, change
-                           % the COM port number in "CascadeTriggerChen"
+                           % the COM port number in "PulseBlaster"
                            % function.
 %%
 % NOTE all values must be positive integers,uint32 integers, i.e. allowed range

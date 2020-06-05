@@ -1,29 +1,25 @@
-p = genpath([pwd '\Matlab\']);
+p = genpath(pwd);
 addpath(p);
 
-if ~exist('CT') %#ok<*EXIST>
-    CT = CascadeTriggerChen();% initialize the trigger device
-                           % if the device couldn't be connected, change
-                           % the COM port number in "CascadeTriggerChen"
-                           % function.
+if ~exist('PB') %#ok<*EXIST>
+  PB = PulseBlaster(false); % create PB object, don't connect yet
+  PB.SERIAL_PORT = 'COM3'; % change from default com port
+  PB.Connect(); % now connect via serial
 end
-%%
-% NOTE all values must be positive integers,uint32 integers, i.e. allowed range
+
+% NOTE all values must 32-bit, unsigned integers, i.e. allowed range
 % is 0 to 4,294,967,295
 
+% PB.Disable_Scope_Mode();
+PB.nPreTrigger = 1;
+PB.prf = 90;              % [Hz] set pulse repetitation or AOD scanning frequency
+PB.aodTrigger = 9;          % set the devider, camera frame rate = prf/aodTrigge
+PB.postAcqDelay = 1000;     % [us] set the delay after one camera frame 
+PB.camTrigDelay = 900;      % [us] set the delay between AOD and camera trigger
+PB.Enable_Scope_Mode();     % start triggering
 
-% CT.Disable_Scope_Mode();
-CT.nPreTrigger = 1;
-CT.preTriggerPrf =  90; %[Hz] --------same as the scanning rate of AOD -----------
-CT.prf = 90; % ------------set pulse repetitation or AOD scanning frequency---------
-CT.aodTrigger = 9;% ----------set the devider, camera frame rate = prf/aodTrigger -----
-CT.postAcqDelay = 10; % set the delay after one camera frame 
-CT.camTrigDelay = 9; % set the delay between AOD and camera trigger in us!
-CT.Enable_Scope_Mode();% start triggeringcl
-
-
-pause(20); %------- set the triggering time duration -------------
-CT.Disable_Scope_Mode();% stop triggering 
+% pause(20); %------- set the triggering time duration -------------
+% PB.Disable_Scope_Mode(); % stop triggering 
 
 
 

@@ -1,5 +1,5 @@
 % Chen Trigger Examples
-CT = CascadeTriggerChen();
+CT = PulseBlaster();
 
 % has two modes, free-running and cascade
 % free-running:

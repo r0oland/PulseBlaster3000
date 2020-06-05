@@ -1,8 +1,7 @@
 % 
-classdef CascadeTriggerChen < BaseHardwareClass
+classdef PulseBlaster < BaseHardwareClass
   properties
     prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
-    preTriggerPrf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % HZ
     nPreTrigger(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 1; %
     postAcqDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [us]
     camTrigDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 0; % [us]
@@ -15,6 +14,8 @@ classdef CascadeTriggerChen < BaseHardwareClass
     nBaselineWait(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 20;
     nRecordLength(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 40;
     nCycleLength(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 80;
+
+    SERIAL_PORT = 'COM26';
   end
 
   % depended properties are calculated from other properties
@@ -37,7 +38,6 @@ classdef CascadeTriggerChen < BaseHardwareClass
   % things we don't want to accidently change but that still might be interesting
   properties (Constant)
     % serial properties
-    SERIAL_PORT = 'COM26';
     BAUD_RATE = 9600;
 
     DO_AUTO_CONNECT = true; % connect when object is initialized?
@@ -77,7 +77,7 @@ classdef CascadeTriggerChen < BaseHardwareClass
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods
     % constructor, called when class is created
-    function CT = CascadeTriggerChen(doConnect)
+    function CT = PulseBlaster(doConnect)
       if nargin < 1
         doConnect = CT.DO_AUTO_CONNECT;
       end
