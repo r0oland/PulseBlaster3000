@@ -278,8 +278,6 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
   // now we do the actual triggering to acquire data %%%%%%%%%%%%%%%%%%%%%%%%%%%
   // this might run for eternaty...
   // we wait 50% of the trigger period on, then of, so we need half the actual period
-  uint_fast32_t remainTrigger = 0;
-  bool isFirstTriggerCycle = true;
   while (doTrigger)
   {
     if (firstHalf)
@@ -300,20 +298,9 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
       GPIOC_PDOR = 0b00000010; // AOD LOW | PCO HIGH
       delayMicroseconds(offWait);
     }
-    
-    // now we have finished the first full trigger period (up and down)
-    // see how many triggers we still need
-    if (!isFirstTriggerCycle)
-    {
-      remainTrigger = nTrigger; 
-    }
-    else // first cycle triggers AOD alread
-    {
-      isFirstTriggerCycle = false;
-      remainTrigger = nTrigger - nPreTrigger;
-    }
+
     // we have already triggered once (with a delay, so account for that)
-    remainTrigger--; 
+    uint_fast32_t remainTrigger = nTrigger - 1; 
     for (uint_fast32_t iTrig = 0; iTrig < remainTrigger; iTrig++)
     {
       GPIOC_PDOR = 0b00000110; // AOD & PCO high
