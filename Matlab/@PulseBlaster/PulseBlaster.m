@@ -3,6 +3,7 @@ classdef PulseBlaster < BaseHardwareClass
   % general trigger settings
   properties
     prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
+    trigDuration(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 5; % [ns]
   end
   % chen trigger settings
   properties
@@ -13,7 +14,6 @@ classdef PulseBlaster < BaseHardwareClass
       % number of AOD triggers per camera trigger  
 
     daqDelay(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 3;
-    trigDuration(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 5;
     camWait(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 4;
     nBaselineWait(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 20;
     nRecordLength(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 40;
@@ -54,6 +54,7 @@ classdef PulseBlaster < BaseHardwareClass
     ENABLE_SCOPE = uint16(12);
     % TODO - same as scope, but triggered externally...
     ENABLE_CASCADE = uint16(13);
+    TRIGGER_STARTED = uint16(18);
     DISABLE_TRIGGER = uint16(19);
 
     % chen specific commands

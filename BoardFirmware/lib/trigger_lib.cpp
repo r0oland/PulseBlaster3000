@@ -204,6 +204,59 @@ FASTRUN uint_fast8_t TeensyTrigger::check_for_serial_command()
     return 0;
 }
 
+FASTRUN void TeensyTrigger::scope()
+{
+  uint_fast32_t lastCommandCheck = 0;
+  uint_fast32_t triggerCounter = 0;
+  uint_fast8_t doTrigger = true;
+  uint32_t lastTriggerTime = 0;
+
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // read confing as send from matlab
+  uint_fast32_t triggerPeriod = serial_read_32bit(); // trigger period in us
+  // trigger how many times? per AOD cycle
+  uint_fast32_t trigOnTime = serial_read_32bit();
+  uint_fast32_t nTrigger = serial_read_32bit();
+
+  setup_nano_delay(trigOnTime);
+  serial_write_16bit(TRIGGER_STARTED); // send the "we are triggering" command
+
+  while (doTrigger)
+  {
+    while ((micros() - lastTriggerTime) < triggerPeriod)
+      {}; // here we wait...
+
+    lastTriggerTime = micros();
+    TRIG_OUT_PORT = 0b11111111; // all high
+    wait_nano_delay();
+    TRIG_OUT_PORT = 0b00000000; // all low
+    triggerCounter++; 
+    // if nTrigger = 0 we trigger forevere, otherwise check if we are done
+    if (nTrigger && (triggerCounter >= nTrigger))
+      doTrigger = 0;
+
+    // check if we got a new serial command to stop triggering
+    // COMMAND_CHECK_INTERVALL is high, so we only check once in a while
+    if ((millis() - lastCommandCheck) >= COMMAND_CHECK_INTERVALL)
+    {
+      lastCommandCheck = millis();
+      if (Serial.available() >= 2)
+      {
+        this->currentCommand = serial_read_16bit_no_wait();
+        if (this->currentCommand == DISABLE_TRIGGER)
+          doTrigger = false;
+      }
+    }
+  } // while (doTrigger)
+
+  LED_PORT = 0b00000000; // disable all LEDs
+  ledBrightness = 0;
+  serial_write_16bit(DONE); // send the "ok, we are done" command
+  serial_write_32bit(triggerCounter);
+  this->currentCommand = DO_NOTHING; // exit state machine
+}
+
+
 // custom trigger function for chen to trigger AOD and camera only -------------
 FASTRUN void TeensyTrigger::chen_scope()
 {
@@ -252,28 +305,18 @@ FASTRUN void TeensyTrigger::chen_scope()
   // Here we start writing things to the port / trigger outputs and start the
   // action
 
-  GPIOC_PDOR = 0b00000000; // all trigger pins low
+  TRIG_OUT_PORT = 0b00000000; // all trigger pins low
   LED_PORT = 0b01010000;   // enabel Cam and AOD LEDs
 
   // we pre trigger the AOD n-times %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // then we turn on the camera and send out the remaining AOD triggers
   for (uint_fast8_t iTrig = 0; iTrig < nPreTrigger; iTrig++)
   {
-    GPIOC_PDOR = 0b00000100; // AOD HIGH | PCO LOW
+    TRIG_OUT_PORT = 0b00000100; // AOD HIGH | PCO LOW
     wait_nano_delay();
-    GPIOC_PDOR = 0b00000000; // all low
+    TRIG_OUT_PORT = 0b00000000; // all low
     wait_nano_delay();
   }
-  // // now we send our the rest of the trigger signals as usual
-  // // i.e. AOD alternating and cam always on
-  // for (uint_fast8_t iTrig = 0; iTrig < remainTrigger; iTrig++)
-  // {
-  //   GPIOC_PDOR = 0b00000110; // AOD HIGH | PCO HIGH
-  //   wait_nano_delay();
-  //   GPIOC_PDOR = 0b00000010; // AOD LOW | PCO HIGH
-  //   wait_nano_delay();
-  // }
-  // GPIOC_PDOR = 0b00000000; // all trigger pins low
 
   // now we do the actual triggering to acquire data %%%%%%%%%%%%%%%%%%%%%%%%%%%
   // this might run for eternaty...
@@ -282,20 +325,20 @@ FASTRUN void TeensyTrigger::chen_scope()
   {
     if (firstHalf)
     {
-      GPIOC_PDOR = 0b00000100; // AOD HIGH | PCO LOW
+      TRIG_OUT_PORT = 0b00000100; // AOD HIGH | PCO LOW
       delayMicroseconds(onWait);
-      GPIOC_PDOR = 0b00000110; // AOD HIGH | PCO HIGH
+      TRIG_OUT_PORT = 0b00000110; // AOD HIGH | PCO HIGH
       delayMicroseconds(offWait);
-      GPIOC_PDOR = 0b00000010; // AOD LOW | PCO HIGH
+      TRIG_OUT_PORT = 0b00000010; // AOD LOW | PCO HIGH
       wait_nano_delay();
     }
     else
     {
-      GPIOC_PDOR = 0b00000100; // AOD HIGH | PCO LOW
+      TRIG_OUT_PORT = 0b00000100; // AOD HIGH | PCO LOW
       wait_nano_delay();
-      GPIOC_PDOR = 0b00000000; // AOD LOW | PCO LOW
+      TRIG_OUT_PORT = 0b00000000; // AOD LOW | PCO LOW
       delayMicroseconds(onWait);
-      GPIOC_PDOR = 0b00000010; // AOD LOW | PCO HIGH
+      TRIG_OUT_PORT = 0b00000010; // AOD LOW | PCO HIGH
       delayMicroseconds(offWait);
     }
 
@@ -303,12 +346,12 @@ FASTRUN void TeensyTrigger::chen_scope()
     uint_fast32_t remainTrigger = nTrigger - 1; 
     for (uint_fast32_t iTrig = 0; iTrig < remainTrigger; iTrig++)
     {
-      GPIOC_PDOR = 0b00000110; // AOD HIGH | PCO HIGH
+      TRIG_OUT_PORT = 0b00000110; // AOD HIGH | PCO HIGH
       wait_nano_delay();
-      GPIOC_PDOR = 0b00000010; // PCO high | AOD LOW
+      TRIG_OUT_PORT = 0b00000010; // PCO high | AOD LOW
       wait_nano_delay();
     }
-    GPIOC_PDOR = 0b00000000; // all trigger pins low
+    TRIG_OUT_PORT = 0b00000000; // all trigger pins low
     triggerCounter++;
     // delay after acq. is done for camera to prepare for next frame
     delayMicroseconds(postAcqDelay);
@@ -391,16 +434,16 @@ FASTRUN void TeensyTrigger::chen_cascade()
       // check if we need to activate the blocking trigger
       if (cycleTrigger >= nRecordLength)
       {
-        GPIOC_PDOR = 0b00001000; // activate block, disable rest
+        TRIG_OUT_PORT = 0b00001000; // activate block, disable rest
         LED_PORT = 0b00001000;
       }
       else
       {
-        GPIOC_PDOR = trigOutChMask;
+        TRIG_OUT_PORT = trigOutChMask;
         LED_PORT = ledOutMask;
         // writes trigger mask to output port, thus triggers
         delayMicroseconds(trigDuration);
-        GPIOC_PDOR = 0b00000000;
+        TRIG_OUT_PORT = 0b00000000;
       }
 
       // keep track of how often we have triggered

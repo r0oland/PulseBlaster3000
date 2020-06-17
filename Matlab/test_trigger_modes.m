@@ -7,14 +7,15 @@ end
 % has two modes, free-running and cascade
 % free-running:
 PB.prf = 500; % [HZ]
-PB.nPreTrigger = 1; 
-PB.postAcqDelay = 100; % [us]
-PB.aodTrigger = 9; 
       
 PB.Enable_Chen_Scope();
-pause(1);
+pause(0.5);
 PB.Disable_Chen_Scope();
-      
+
 PB.Enable_Chen_Cascade();
-pause(1);
 PB.Disable_Chen_Cascade();
+
+PB.prf = 10000; % [Hz]
+PB.trigDuration = 5000; % [ns] trigger on time
+PB.Enable_Scope(0);
+% PB.Disable_Scope();

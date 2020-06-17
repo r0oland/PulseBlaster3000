@@ -18,6 +18,11 @@ void loop() {
         break;
 
       // -----------------------------------------------------------------------
+      case ENABLE_SCOPE:
+        MyTrig.scope();
+        break;
+
+      // -----------------------------------------------------------------------
       case ENABLE_CHEN_SCOPE:
         MyTrig.chen_scope();
         break;
