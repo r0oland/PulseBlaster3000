@@ -1,7 +1,12 @@
 % 
 classdef PulseBlaster < BaseHardwareClass
   properties
-    prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
+    prf(1,1) {mustBeNumeric,mustBeNonnegative,mustBeFinite} = 100;
+    mode(1,:) char = 'us'; % set function ensures only valid modes are used!
+  end
+
+  properties
+    % chen trigger specific properties
     nPreTrigger(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 1; %
     postAcqDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [us]
     camTrigDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 0; % [us]
@@ -46,25 +51,23 @@ classdef PulseBlaster < BaseHardwareClass
     %% Comands defined in teensy_lib.h
 
     % define commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    DO_NOTHING = uint16(00);
-    SET_TRIGGER_CH = uint16(11);
-    DO_TRIGGER = uint16(22);
+    DO_NOTHING = uint16(0);
     STOP_TRIGGER = uint16(23);
-    ENABLE_SCOPE_MODE = uint16(66);
-    DISABLE_SCOPE = uint16(67);
-    ENABLE_CASCADE_TRIGGER = uint16(68);
-    DISABLE_CASCADE_TRIGGER = uint16(69);
-    CHECK_CONNECTION = uint16(88);
-    DONE = uint16(99);
-    READY_FOR_COMMAND = uint16(98);
 
-    % define trigger port bits %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    DAQ_TRIG = uint16(8);
-    US_TRIG = uint16(7);
-    ONDA_TRIG = uint16(5);
-    EDGE_TRIG = uint16(4);
-    DAQ_LED_PIN = uint16(3);
-    ALL_TRIG = uint16(0);
+    SET_TRIGGER_CH = uint16(60);
+
+    ENABLE_INT_TRIGGER = uint16(61);
+    ENABLE_CHEN_INT_TRIGGER = uint16(62);
+    DISABLE_INT_TRIGGER = uint16(63);
+
+    ENABLE_CASCADE_TRIGGER = uint16(64);
+    ENABLE_CHEN_CASCADE_TRIGGER = uint16(65);
+    DISABLE_CASCADE_TRIGGER = uint16(66);
+
+    CHECK_CONNECTION = uint16(88);
+    READY_FOR_COMMAND = uint16(98);
+    DONE = uint16(99);
+
   end
 
   % same as constant but now showing up as property

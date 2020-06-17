@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "PulseBlaster3000"
+		},
+		{
+			"path": "PulseBlaster3000\\BoardFirmware"
+		},
+		{
+			"path": "Cascade_Trigger\\board_firmware"
+		}
+	]
+}

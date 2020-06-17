@@ -1,24 +1,23 @@
-% function [] = Wait_Done(AQ)
+% function [] = Wait_Done(Obj)
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
-function [success] = Wait_Done(AQ,timeOut)
+function [success] = Wait_Done(Obj,timeOut)
   success = false;
   if nargin == 1
     timeOut = 3; % 1 seconds default timeout
   end
   t1 = tic;
   % wait for ready command...
-  while (AQ.bytesAvailable<2)
+  while (Obj.bytesAvailable<2)
     if toc(t1) > timeOut
-      AQ.Verbose_Warn('Teensy response timeout!\n');
+      Obj.Verbose_Warn('Teensy response timeout!\n');
       return;
     end
   end
 
-  [~,answer] = AQ.Read_Data(2);
-  if answer ~= AQ.DONE
+  [~,answer] = Obj.Read_Data(2);
+  if answer ~= Obj.DONE
     short_warn('[CT] unexpected return value:');
-    answer
     error('[CT] Something went wrong in the teensy!');
   else
     success = true;

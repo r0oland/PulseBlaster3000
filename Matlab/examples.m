@@ -1,14 +1,5 @@
-% Chen Trigger Examples
-CT = PulseBlaster();
-
-% has two modes, free-running and cascade
-% free-running:
-CT.prf = 100; % [HZ]
-CT.preTriggerPrf = 100; % [HZ]
-CT.nPreTrigger = 1; 
-CT.postAcqDelay = 100; % [us]
-CT.aodTrigger = 9; 
-      
-CT.Enable_Scope_Mode();
-
-% CT.Disable_Scope_Mode();
+if ~exist('PB') %#ok<*EXIST>
+  PB = PulseBlaster(false); % create PB object, don't connect yet
+  PB.SERIAL_PORT = 'COM4'; % change from default com port
+  PB.Connect(); % now connect via serial
+end

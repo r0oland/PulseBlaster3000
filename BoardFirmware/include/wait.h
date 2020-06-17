@@ -1,7 +1,7 @@
 #ifndef WAIT
 #define WAIT
 
-#define NOP __asm__ __volatile__ ("nop\n\t") // one clock cycle ~4.25 ns
+#define NOP __asm__ __volatile__ ("nop \n\t") // one clock cycle ~4.25 ns
 #define NOP_5 NOP; NOP; NOP; NOP; NOP;
 #define NOP_10 NOP_5; NOP_5;
 #define NOP_25 NOP_10; NOP_10; NOP_5;

@@ -5,6 +5,12 @@
 #include "..\lib\serial_lib.cpp"
 #include "wait.h" // always required when using platformio
 
+// used for setup_nano_delay and wait_nano_delay
+static uint32_t nano_ticks;
+constexpr double CLOCK_RATE = 240.0E6; // MCU clock rate - measure it for best accuracy
+constexpr unsigned NANO_OVERHEAD = 130; // overhead - adjust as needed
+constexpr unsigned NANO_JITTER = 0; // adjusts for jitter prevention - leave at 18
+
 // port B (GPIOB_PDOR/GPIOB_PDIR) -> used for trigger input
 const uint8_t TRIG_IN_PINS[] = {16,17};
 // port C (GPIOC_PDOR/GPIOC_PDIR) -> used for trigger output
@@ -12,18 +18,24 @@ const uint8_t TRIG_OUT_PINS[] = {15,22,23,9,10,13,11,12};
 // port D (GPIOD_PDOR/GPIOD_PDIR) -> used for LED output
 const uint8_t LED_OUT_PINS[] = {2,14,7,8,6,20,21,5};
 
-
 // Define serial communication commands (shared with matlab)
 const uint_fast16_t DO_NOTHING = 0;
 const uint_fast16_t STOP_TRIGGER = 23;
-const uint_fast16_t ENABLE_INT_TRIGGER = 66;
-const uint_fast16_t DISABLE_INT_TRIGGER = 67;
-const uint_fast16_t ENABLE_CASCADE_TRIGGER = 68;
-const uint_fast16_t DISABLE_CASCADE_TRIGGER = 69;
+
+const uint_fast16_t SET_TRIGGER_CH = 60;
+const uint_fast16_t ENABLE_INT_TRIGGER = 61;
+const uint_fast16_t ENABLE_CHEN_INT_TRIGGER = 62;
+const uint_fast16_t DISABLE_INT_TRIGGER = 63;
+
+const uint_fast16_t ENABLE_CASCADE_TRIGGER = 64;
+const uint_fast16_t ENABLE_CHEN_CASCADE_TRIGGER = 65;
+const uint_fast16_t DISABLE_CASCADE_TRIGGER = 66;
+
 const uint_fast16_t CHECK_CONNECTION = 88;
 const uint_fast16_t READY_FOR_COMMAND = 98;
 const uint_fast16_t DONE = 99;
 
+// Chens trigger bit definitions
 // bits in GPIOC_PDOR, NOT counted from zero...
 constexpr uint_fast8_t DAQ_BIT = 8;      // ch 1
 constexpr uint_fast8_t ANDOR_BIT = 7;    // ch 2
@@ -31,6 +43,13 @@ constexpr uint_fast8_t STIM_BIT = 5;     // ch 3
 constexpr uint_fast8_t BLOCK_BIT = 4;    // ch 4
 constexpr uint_fast8_t AOD_BIT = 3;      // ch 5
 constexpr uint_fast8_t FAST_CAM_BIT = 2; // ch 6
+
+constexpr uint_fast8_t CH1_TRIG_BIT = 8;  // ch1 == DAQ_TRIG    
+constexpr uint_fast8_t CH2_TRIG_BIT = 7;  // ch2 == US_TRIG
+constexpr uint_fast8_t CH3_TRIG_BIT = 5;  // ch3 == ONDA_TRIG
+constexpr uint_fast8_t CH4_TRIG_BIT = 4;  // ch4 == EDGE_TRIG
+constexpr uint_fast8_t CH5_TRIG_BIT = 3;      
+constexpr uint_fast8_t CH6_TRIG_BIT = 2; 
 
 // All below might not be needed or has not been tested... %%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,13 +90,16 @@ class TeensyTrigger {
     inline void set_all_led_brightness(uint8_t ledPower);
     inline void do_nothing();
 
-    FASTRUN uint_fast8_t check_for_serial_command();
+    // methods to define and enable scope mode or external triggering
 
-    FASTRUN void chen_stand_alone_trigger();
-    FASTRUN void chen_cascade_trigger();
-    // FASTRUN void execute_serial_command();
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    // variables for analog & digital temperature measurements
+    inline void set_trigger_channel();
+    inline void stand_alone_trigger();
+    inline void cascade_trigger(); 
+
+    inline void chen_stand_alone_trigger();
+    inline void chen_cascade_trigger();
+
+    inline uint_fast8_t check_for_serial_command();
     const uint_fast16_t COMMAND_CHECK_INTERVALL = 200; // [ms] wait this long before checking for serial
 
     uint8_t trigOutChMask = 0b00000000;

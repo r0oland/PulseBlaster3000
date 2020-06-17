@@ -8,7 +8,7 @@ function [] = Disable_Scope_Mode(CT,timeOut)
 
   % starts recording of the calibration data in the teensy
   CT.PrintF('[CT] Disabling scope trigger\n');
-  CT.Write_Command(CT.DISABLE_SCOPE);
+  CT.Write_Command(CT.DISABLE_INT_TRIGGER);
   CT.Wait_Done(timeOut);
   % wait for data to come in...
   t1 = tic();
