@@ -18,14 +18,32 @@ void loop() {
         break;
 
       // -----------------------------------------------------------------------
-      case ENABLE_INT_TRIGGER:
-        MyTrig.chen_stand_alone_trigger();
+      // set trigger outputs used in stand_alone_trigger and cascade_trigger
+      case SET_TRIGGER_CH:
+        MyTrig.set_trigger_channel();
         break;
+
+      // -----------------------------------------------------------------------
+      case ENABLE_INT_TRIGGER:
+        MyTrig.stand_alone_trigger();
+        break;
+
       // -----------------------------------------------------------------------
       case ENABLE_CASCADE_TRIGGER:
+        MyTrig.cascade_trigger();
+        break;
+
+      // -----------------------------------------------------------------------
+      case ENABLE_CHEN_INT_TRIGGER:
+        MyTrig.chen_stand_alone_trigger();
+        break;
+
+      // -----------------------------------------------------------------------
+      case ENABLE_CHEN_CASCADE_TRIGGER:
         MyTrig.chen_cascade_trigger();
         break;
 
+      // -----------------------------------------------------------------------
       case CHECK_CONNECTION:
         serial_write_16bit(READY_FOR_COMMAND); // send the "ok, we are done" command
         MyTrig.currentCommand = DO_NOTHING; // exit state machine

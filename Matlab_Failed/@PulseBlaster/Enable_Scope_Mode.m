@@ -11,7 +11,7 @@ function [] = Enable_Scope_Mode(CT)
   CT.PrintF('[CT] Enabling free-running trigger @ %2.2fkHz.\n',CT.prf*1e-3);
 
   % SEND actual data to teensy, DO NOT CHANGE ORDER OF THIS
-  CT.Write_Command(CT.ENABLE_SCOPE_MODE);
+  CT.Write_Command(CT.ENABLE_CHEN_INT_TRIGGER);
   CT.Write_32bit(nPreTrigger);
   CT.Write_32bit(nTrigger);
   CT.Write_32bit(triggerFreq);

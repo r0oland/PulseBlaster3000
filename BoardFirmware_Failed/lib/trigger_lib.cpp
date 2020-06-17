@@ -1,32 +1,13 @@
 #include "trigger_lib.h"
+#include "wait.h"
 
 //NanoDelay %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// delay for a given number of nano seconds
-// less sensitive to interrupts and DMA
-// max delay is 4 seconds
-// NOTE:  minimum pulse width is ~700 nsec, accuracy is ~ -0/+40 ns
-// NOTE:  you can't trust this code:
-//        compiler or library changes will change timing overhead
-//        CPU speed will effect timing
-
 // prepare before, so less delay later
-static uint32_t nano_ticks;
-
-// constexpr double CLOCK_RATE = 240.0E6; // MCU clock rate - measure it for best accuracy
-constexpr double CLOCK_RATE = 240.0E6; // MCU clock rate - measure it for best accuracy
-// constexpr unsigned NANO_OVERHEAD = 470;         // overhead - adjust as needed
-constexpr unsigned NANO_OVERHEAD = 130; // overhead - adjust as needed
-// constexpr unsigned NANO_JITTER = 18;            // adjusts for jitter prevention - leave at 18
-constexpr unsigned NANO_JITTER = 0; // adjusts for jitter prevention - leave at 18
-
 void setup_nano_delay(uint32_t nanos)
 {
   // set up cycle counter
-  ARM_DEMCR |= ARM_DEMCR_TRCENA;
-  ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
-
-  // improve teensy 3.1 clock accuracy
-  OSC0_CR = 0x2;
+  ARM_DEMCR |= ARM_DEMCR_TRCENA;          // Enable debugging & monitoring blocks
+  ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA; // Enable cycle count
 
   if (nanos < NANO_OVERHEAD) // we can't do less than this
     nanos = NANO_OVERHEAD;
@@ -49,70 +30,51 @@ FASTRUN void wait_nano_delay(void)
   // loop until time is almost up
   while ((ARM_DWT_CYCCNT - start_time) < loop_ticks)
   {
-    // could do other things here
   }
 
   if (NANO_JITTER)
-  {                      // compile time option
-    register unsigned r; // for debugging
+  { // compile time option
+    register unsigned r = (nano_ticks - (ARM_DWT_CYCCNT - start_time));
 
     // delay for the remainder using single instructions
-    switch (r = (nano_ticks - (ARM_DWT_CYCCNT - start_time)))
+    switch (r)
     {
     case 18:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 17:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 16:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 15:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 14:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 13:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 12:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 11:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 10:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 9:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 8:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 7:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 6:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 5:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 4:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 3:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 2:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     case 1:
-      __asm__ volatile("nop"
-                       "\n\t");
+      NOP;
     default:
       break;
     } // switch()
@@ -191,21 +153,78 @@ void TeensyTrigger::show_led_welcome()
   LED_PORT = 0b00000000; // disable all LEDs for now
 }
 
-// check for new command -------------------------------------------------------
-FASTRUN uint_fast8_t TeensyTrigger::check_for_serial_command()
+void TeensyTrigger::set_trigger_channel()
 {
-  // read a command if one was send
-  if (Serial.available() >= 2)
+  while(Serial.available() < 2){};
+  uint8_t readVal = static_cast<uint8_t>(serial_read_16bit_no_wait());
+  // serial_read_16bit_no_wait();
+  // this->trigOutChMask = static_cast<uint8_t>(serial_read_16bit());
+  // this->trigOutChMask = static_cast<uint8_t>(serial_read_16bit());
+
+  serial_write_16bit(static_cast<uint16_t>(readVal));
+  serial_write_16bit(DONE); // send the "ok, we are done" command
+  this->currentCommand = DO_NOTHING; // exit state machine
+}
+
+void TeensyTrigger::stand_alone_trigger()
+{
+  uint16_t slowMode = serial_read_16bit(); // delay in ms or us
+  uint16_t triggerPeriod = serial_read_16bit();
+  uint16_t trigOnTime = serial_read_16bit(); // trigger duration in us
+  // TODO try and make this in nanos...
+  uint16_t nTrigger = serial_read_16bit(); // trigger how many times?
+  this->lastCommandCheck = 0;
+  uint32_t triggerCounter = 0; 
+  uint8_t doTrigger = 1;
+  uint32_t lastTriggerTime = 0;
+
+  while (doTrigger)
   {
-    this->currentCommand = serial_read_16bit_no_wait(); // read the incoming byte:
-    return 1;
+    // wait for next trigger point, we do this at least once!
+    if (slowMode)
+    {
+      while ((millis() - lastTriggerTime) < triggerPeriod)
+      {}; // here we wait...
+      lastTriggerTime = millis();
+    }
+    else
+    {
+      while ((micros() - lastTriggerTime) < triggerPeriod)
+      {}; // here we wait...
+      lastTriggerTime = micros();
+    }
+
+    // acutal triggering happens here, but using trigger ports
+    TRIG_OUT_PORT = trigOutChMask; // enable triggers as prev. defined
+    delayMicroseconds(trigOnTime);
+    TRIG_OUT_PORT = 0b00000000; // disable all trigger
+    triggerCounter++;
+
+    // if nTrigger = 0 we trigger indefinately
+    if (nTrigger && (triggerCounter >= nTrigger))
+      doTrigger = 0;
+
+    // has enough time passed to look for a new command?
+    if ((millis() - lastCommandCheck) >= COMMAND_CHECK_INTERVALL)
+    {
+      lastCommandCheck = millis();
+      check_for_serial_command(); 
+      if (this->currentCommand == DISABLE_INT_TRIGGER)
+        doTrigger = false;
+    }
   }
-  else
-    return 0;
+  serial_write_16bit(DONE); // send the "ok, we are done" command
+  serial_write_32bit(triggerCounter); // return number of triggers to matlab
+  LED_PORT = 0b00000000; // disable LEDs
+  this->currentCommand = DO_NOTHING; // exit state machine
+}
+
+void TeensyTrigger::cascade_trigger()
+{
 }
 
 // custom trigger function for chen to trigger AOD and camera only -------------
-FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
+void TeensyTrigger::chen_stand_alone_trigger()
 {
   set_all_led_brightness(0);
   uint_fast32_t lastCommandCheck = 0;
@@ -234,8 +253,8 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
   // firstHalf = do we need to trigger AOD in first or second half of
   // first full trigger period
   // bool firstHalf = (camTrigDelay * 1000 >= triggerPeriod);
-  uint_fast32_t onWait = 0;                 // wait this long, the trigger AOD
-  uint_fast32_t offWait = 0;                // after triggering AOD, wait this long to complete cycle
+  uint_fast32_t onWait = 0;  // wait this long, the trigger AOD
+  uint_fast32_t offWait = 0; // after triggering AOD, wait this long to complete cycle
   const bool firstHalf = (camTrigDelay * 1000) <= triggerPeriod;
   if (firstHalf) // triggerPeriod in ns
   {
@@ -264,16 +283,6 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
     GPIOC_PDOR = 0b00000000; // all low
     wait_nano_delay();
   }
-  // // now we send our the rest of the trigger signals as usual
-  // // i.e. AOD alternating and cam always on
-  // for (uint_fast8_t iTrig = 0; iTrig < remainTrigger; iTrig++)
-  // {
-  //   GPIOC_PDOR = 0b00000110; // AOD HIGH | PCO HIGH
-  //   wait_nano_delay();
-  //   GPIOC_PDOR = 0b00000010; // AOD LOW | PCO HIGH
-  //   wait_nano_delay();
-  // }
-  // GPIOC_PDOR = 0b00000000; // all trigger pins low
 
   // now we do the actual triggering to acquire data %%%%%%%%%%%%%%%%%%%%%%%%%%%
   // this might run for eternaty...
@@ -300,10 +309,10 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
     }
 
     // we have already triggered once (with a delay, so account for that)
-    uint_fast32_t remainTrigger = nTrigger - 1; 
+    uint_fast32_t remainTrigger = nTrigger - 1;
     for (uint_fast32_t iTrig = 0; iTrig < remainTrigger; iTrig++)
     {
-      GPIOC_PDOR = 0b00000110; // AOD HIGH | PCO HIGH
+      GPIOC_PDOR = 0b00000110; // AOD & PCO high
       wait_nano_delay();
       GPIOC_PDOR = 0b00000010; // PCO high | AOD LOW
       wait_nano_delay();
@@ -334,10 +343,9 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
 }
 
 // custom trigger function for chen to trigger AOD and camera only -------------
-FASTRUN void TeensyTrigger::chen_cascade_trigger()
+void TeensyTrigger::chen_cascade_trigger()
 {
   set_all_led_brightness(0);
-  trigOutChMask = 0b00000000;
   uint_fast32_t cycleTrigger = 0;
   uint_fast32_t nCycle = 0;   // keeps track of completed triggering cycles
   uint_fast32_t nTrigger = 0; // keeps track of triggering during
@@ -434,4 +442,17 @@ FASTRUN void TeensyTrigger::chen_cascade_trigger()
   serial_write_32bit(nTrigger);
   serial_write_32bit(nCycle);
   this->currentCommand = DO_NOTHING; // exit state machine
+}
+
+// check for new command -------------------------------------------------------
+uint_fast8_t TeensyTrigger::check_for_serial_command()
+{
+  // read a command if one was send
+  if (Serial.available() >= 2)
+  {
+    this->currentCommand = serial_read_16bit_no_wait(); // read the incoming byte:
+    return 1;
+  }
+  else
+    return 0;
 }
