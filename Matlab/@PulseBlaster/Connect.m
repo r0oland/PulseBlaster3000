@@ -1,25 +1,25 @@
-% function [] = Connect(CT)
+% function [] = Connect(PB)
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
-function [] = Connect(CT)
-  if ~isempty(CT.serialPtr) && CT.isConnected
-    CT.VPrintF('[CT] Trigger already connected!\n');
+function [] = Connect(PB)
+  if ~isempty(PB.serialPtr) && PB.isConnected
+    PB.VPrintF('[Blaster] Trigger already connected!\n');
   else
     tic;
-    CT.VPrintF('[CT] Connecting to trigger...');
+    PB.VPrintF('[Blaster] Connecting to trigger...');
     try
       tic();
-      CT.serialPtr = openPort(CT.SERIAL_PORT,CT.BAUD_RATE);
-      CT.isConnected = true;
+      PB.serialPtr = openPort(PB.SERIAL_PORT,PB.BAUD_RATE);
+      PB.isConnected = true;
       % read back identifier to make sure we have a working connection
       % TODO
-      CT.Done();
+      PB.Done();
     catch ME
-      CT.VPrintF('\n');
-      CT.SERIAL_PORT
-      CT.Verbose_Warn('Opening serial connection failed!\n');
+      PB.VPrintF('\n');
+      PB.SERIAL_PORT
+      PB.Verbose_Warn('Opening serial connection failed!\n');
       rethrow(ME);
     end
   end
-  CT.Flush_Serial();
+  PB.Flush_Serial();
 end

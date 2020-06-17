@@ -1,7 +1,7 @@
-function [] = Write_Command(CT,command)
+function [] = Write_Command(PB,command)
   if ~isa(command,'uint16')
     error('Counter commands must be uint16!');
   end
   command = typecast(command, 'uint8'); % commands send as 2 byte
-  CT.Write_Data(command);
+  PB.Write_Data(command);
 end

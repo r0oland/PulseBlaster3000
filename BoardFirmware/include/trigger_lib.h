@@ -15,12 +15,14 @@ const uint8_t LED_OUT_PINS[] = {2,14,7,8,6,20,21,5};
 
 // Define serial communication commands (shared with matlab)
 const uint_fast16_t DO_NOTHING = 0;
+
 const uint_fast16_t STOP_TRIGGER = 23;
-const uint_fast16_t ENABLE_INT_TRIGGER = 66;
-const uint_fast16_t DISABLE_INT_TRIGGER = 67;
-const uint_fast16_t ENABLE_CASCADE_TRIGGER = 68;
-const uint_fast16_t DISABLE_CASCADE_TRIGGER = 69;
-const uint_fast16_t CHECK_CONNECTION = 88;
+const uint_fast16_t ENABLE_CHEN_SCOPE = 66;
+const uint_fast16_t DISABLE_CHEN_SCOPE = 67;
+const uint_fast16_t ENABLE_CHEN_CASCADE = 68;
+const uint_fast16_t DISABLE_CHEN_CASCADE = 69;
+
+const uint_fast16_t CHECK_CONNECTION = 97;
 const uint_fast16_t READY_FOR_COMMAND = 98;
 const uint_fast16_t DONE = 99;
 
@@ -73,8 +75,8 @@ class TeensyTrigger {
 
     FASTRUN uint_fast8_t check_for_serial_command();
 
-    FASTRUN void chen_stand_alone_trigger();
-    FASTRUN void chen_cascade_trigger();
+    FASTRUN void chen_scope();
+    FASTRUN void chen_cascade();
     // FASTRUN void execute_serial_command();
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // variables for analog & digital temperature measurements

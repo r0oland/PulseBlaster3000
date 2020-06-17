@@ -1,7 +1,11 @@
 % 
 classdef PulseBlaster < BaseHardwareClass
+  % general trigger settings
   properties
     prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
+  end
+  % chen trigger settings
+  properties
     nPreTrigger(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 1; %
     postAcqDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [us]
     camTrigDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 0; % [us]
@@ -15,7 +19,7 @@ classdef PulseBlaster < BaseHardwareClass
     nRecordLength(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 40;
     nCycleLength(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 80;
 
-    SERIAL_PORT = 'COM26';
+    SERIAL_PORT = 'COM4';
   end
 
   % depended properties are calculated from other properties
@@ -43,28 +47,25 @@ classdef PulseBlaster < BaseHardwareClass
     DO_AUTO_CONNECT = true; % connect when object is initialized?
     MAX_BYTE_PER_READ = 4096; % we can read this many bytes over serial at once
 
-    %% Comands defined in teensy_lib.h
-
-    % define commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Comands shared with teensy_lib.h
     DO_NOTHING = uint16(00);
-    SET_TRIGGER_CH = uint16(11);
-    DO_TRIGGER = uint16(22);
-    STOP_TRIGGER = uint16(23);
-    ENABLE_SCOPE_MODE = uint16(66);
-    DISABLE_SCOPE = uint16(67);
-    ENABLE_CASCADE_TRIGGER = uint16(68);
-    DISABLE_CASCADE_TRIGGER = uint16(69);
-    CHECK_CONNECTION = uint16(88);
-    DONE = uint16(99);
-    READY_FOR_COMMAND = uint16(98);
 
-    % define trigger port bits %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    DAQ_TRIG = uint16(8);
-    US_TRIG = uint16(7);
-    ONDA_TRIG = uint16(5);
-    EDGE_TRIG = uint16(4);
-    DAQ_LED_PIN = uint16(3);
-    ALL_TRIG = uint16(0);
+    SET_TRIGGER_CH = uint16(11);
+    ENABLE_SCOPE = uint16(12);
+    % TODO - same as scope, but triggered externally...
+    ENABLE_CASCADE = uint16(13);
+    DISABLE_TRIGGER = uint16(19);
+
+    % chen specific commands
+    ENABLE_CHEN_SCOPE = uint16(66);
+    DISABLE_CHEN_SCOPE = uint16(67);
+    ENABLE_CHEN_CASCADE = uint16(68);
+    DISABLE_CHEN_CASCADE = uint16(69);
+
+    CHECK_CONNECTION = uint16(97);
+    READY_FOR_COMMAND = uint16(98);
+    DONE = uint16(99);
+
   end
 
   % same as constant but now showing up as property
@@ -77,28 +78,28 @@ classdef PulseBlaster < BaseHardwareClass
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods
     % constructor, called when class is created
-    function CT = PulseBlaster(doConnect)
+    function PB = PulseBlaster(doConnect)
       if nargin < 1
-        doConnect = CT.DO_AUTO_CONNECT;
+        doConnect = PB.DO_AUTO_CONNECT;
       end
 
-      if doConnect && ~CT.isConnected
-        CT.Connect;
-      elseif ~CT.isConnected
-        CT.VPrintF('[CT] Initialized but not connected yet.\n');
+      if doConnect && ~PB.isConnected
+        PB.Connect;
+      elseif ~PB.isConnected
+        PB.VPrintF('[Blaster] Initialized but not connected yet.\n');
       end
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    function delete(CT)
-      if ~isempty(CT.serialPtr) && CT.isConnected
-        CT.Close();
+    function delete(PB)
+      if ~isempty(PB.serialPtr) && PB.isConnected
+        PB.Close();
       end
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % when saved, hand over only properties stored in saveObj
-    function SaveObj = saveobj(CT)
+    function SaveObj = saveobj(PB)
       SaveObj = CascadeTrigger.empty; % see class def for info
     end
   end
@@ -107,53 +108,51 @@ classdef PulseBlaster < BaseHardwareClass
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods % short methods, which are not worth putting in a file
 
-
-
-    function [] = Write_16Bit(CT,data)
-      CT.Write_Command(data); % same as command, but lets not confuse our users...
+    function [] = Write_16Bit(PB,data)
+      PB.Write_Command(data); % same as command, but lets not confuse our users...
     end
 
-    function [] = Enable_Trigger(CT)
-      CT.Setup_Trigger();
+    function [] = Enable_Trigger(PB)
+      PB.Setup_Trigger();
 
-      if CT.Wait_Done()
-        CT.Done();
+      if PB.Wait_Done()
+        PB.Done();
         tic;
-        CT.VPrintF('[CT] Enabling trigger board...');
-        CT.Write_Command(CT.DO_TRIGGER);
-        CT.Done();
+        PB.VPrintF('[Blaster] Enabling trigger board...');
+        PB.Write_Command(PB.DO_TRIGGER);
+        PB.Done();
       else
-        CT.Verbose_Warn('[CT] Trigger enable failed!\n');
+        PB.Verbose_Warn('[Blaster] Trigger enable failed!\n');
       end
     end
 
-    function [] = Disable_Trigger(CT)
+    function [] = Disable_Trigger(PB)
       tic;
-      CT.VPrintF('[CT] Disabling trigger board...');
-      CT.Write_Command(CT.STOP_TRIGGER);
-      CT.Done();
+      PB.VPrintF('[Blaster] Disabling trigger board...');
+      PB.Write_Command(PB.STOP_TRIGGER);
+      PB.Done();
     end
 
-    function [] = Update_Trigger(CT)
-      CT.Disable_Trigger();
-      CT.Enable_Trigger();
+    function [] = Update_Trigger(PB)
+      PB.Disable_Trigger();
+      PB.Enable_Trigger();
     end
 
-    function [] = Flush_Serial(CT)
+    function [] = Flush_Serial(PB)
       tic;
-      nBytes = CT.bytesAvailable;
+      nBytes = PB.bytesAvailable;
       if nBytes
-        CT.VPrintF('[CT] Flushing %i serial port bytes...',nBytes);
+        PB.VPrintF('[Blaster] Flushing %i serial port bytes...',nBytes);
         for iByte = 1:nBytes
-          [~] = readPort(CT.serialPtr, 1);
+          [~] = readPort(PB.serialPtr, 1);
         end
-        CT.Done();
+        PB.Done();
       end
     end
 
     % --------------------------------------------------------------------------
-    function [slowSampling] = get.slowSampling(CT)
-      if CT.prf > 20
+    function [slowSampling] = get.slowSampling(PB)
+      if PB.prf > 20
         % samplingPeriod in us
         slowSampling = false;
       else
@@ -162,13 +161,13 @@ classdef PulseBlaster < BaseHardwareClass
       end
     end
     % --------------------------------------------------------------------------
-    function [samplingPeriod] = get.samplingPeriod(CT)
-      if CT.slowSampling
+    function [samplingPeriod] = get.samplingPeriod(PB)
+      if PB.slowSampling
         % samplingPeriod in ms
-        samplingPeriod = uint16(1./CT.prf*1e3);
+        samplingPeriod = uint16(1./PB.prf*1e3);
       else
         % samplingPeriod in us
-        samplingPeriod = uint16(1./CT.prf*1e6);
+        samplingPeriod = uint16(1./PB.prf*1e6);
       end
     end
 
@@ -180,10 +179,10 @@ classdef PulseBlaster < BaseHardwareClass
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods % set / get methods
-    function [bytesAvailable] = get.bytesAvailable(CT)
-      if CT.isConnected
+    function [bytesAvailable] = get.bytesAvailable(PB)
+      if PB.isConnected
         numBytesToRead = 0;
-        [~ , bytesAvailable] = readPort(CT.serialPtr, numBytesToRead);
+        [~ , bytesAvailable] = readPort(PB.serialPtr, numBytesToRead);
       else
         bytesAvailable = [];
       end

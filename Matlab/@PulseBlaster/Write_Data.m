@@ -1,18 +1,18 @@
-% function [] = Write_Data(CT)
+% function [] = Write_Data(PB)
 % does something coole...
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
-function [] = Write_Data(CT,data)
-  if CT.isConnected
+function [] = Write_Data(PB,data)
+  if PB.isConnected
     tic();
-    % CT.VPrintF('[CT] Writing %i bytes of data...',numel(data));
+    % PB.VPrintF('[Blaster] Writing %i bytes of data...',numel(data));
     if ~isa(data,'uint8')
-      CT.Verbose_Warn('   Data converted to uint8!');
+      PB.Verbose_Warn('   Data converted to uint8!');
       data = uint8(data);
     end
-    writePort(CT.serialPtr,data);
-    % CT.Done();
+    writePort(PB.serialPtr,data);
+    % PB.Done();
   else
-    CT.Verbose_Warn('Need to connect to Teensy before sening data!\n');
+    PB.Verbose_Warn('Need to connect to Teensy before sening data!\n');
   end
 end

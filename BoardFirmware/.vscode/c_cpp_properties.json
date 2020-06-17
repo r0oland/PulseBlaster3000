@@ -129,8 +129,8 @@
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/openGLCD",
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/ssd1351",
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/x10",
-                "c:/Code/PulseBlaster3000/legacy/BoardFirmware/include",
-                "c:/Code/PulseBlaster3000/legacy/BoardFirmware/src",
+                "c:/Code/PulseBlaster3000/BoardFirmware/include",
+                "c:/Code/PulseBlaster3000/BoardFirmware/src",
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy3",
                 "C:/Users/johan/.platformio/packages/tool-unity",
                 ""
@@ -261,8 +261,8 @@
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/openGLCD",
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/ssd1351",
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/x10",
-                    "c:/Code/PulseBlaster3000/legacy/BoardFirmware/include",
-                    "c:/Code/PulseBlaster3000/legacy/BoardFirmware/src",
+                    "c:/Code/PulseBlaster3000/BoardFirmware/include",
+                    "c:/Code/PulseBlaster3000/BoardFirmware/src",
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy3",
                     "C:/Users/johan/.platformio/packages/tool-unity",
                     ""

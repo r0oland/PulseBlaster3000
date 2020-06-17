@@ -18,12 +18,12 @@ void loop() {
         break;
 
       // -----------------------------------------------------------------------
-      case ENABLE_INT_TRIGGER:
-        MyTrig.chen_stand_alone_trigger();
+      case ENABLE_CHEN_SCOPE:
+        MyTrig.chen_scope();
         break;
       // -----------------------------------------------------------------------
-      case ENABLE_CASCADE_TRIGGER:
-        MyTrig.chen_cascade_trigger();
+      case ENABLE_CHEN_CASCADE:
+        MyTrig.chen_cascade();
         break;
 
       case CHECK_CONNECTION:

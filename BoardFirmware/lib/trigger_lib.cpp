@@ -205,7 +205,7 @@ FASTRUN uint_fast8_t TeensyTrigger::check_for_serial_command()
 }
 
 // custom trigger function for chen to trigger AOD and camera only -------------
-FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
+FASTRUN void TeensyTrigger::chen_scope()
 {
   set_all_led_brightness(0);
   uint_fast32_t lastCommandCheck = 0;
@@ -320,7 +320,7 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
       if (Serial.available() >= 2)
       {
         this->currentCommand = serial_read_16bit_no_wait();
-        if (this->currentCommand == DISABLE_INT_TRIGGER)
+        if (this->currentCommand == DISABLE_CHEN_SCOPE)
           doTrigger = false;
       }
     }
@@ -334,7 +334,7 @@ FASTRUN void TeensyTrigger::chen_stand_alone_trigger()
 }
 
 // custom trigger function for chen to trigger AOD and camera only -------------
-FASTRUN void TeensyTrigger::chen_cascade_trigger()
+FASTRUN void TeensyTrigger::chen_cascade()
 {
   set_all_led_brightness(0);
   trigOutChMask = 0b00000000;
@@ -424,7 +424,7 @@ FASTRUN void TeensyTrigger::chen_cascade_trigger()
       if (Serial.available() >= 2)
       {
         this->currentCommand = serial_read_16bit_no_wait();
-        if (this->currentCommand == DISABLE_CASCADE_TRIGGER)
+        if (this->currentCommand == DISABLE_CHEN_CASCADE)
           waitForTrigger = false;
       }
     }

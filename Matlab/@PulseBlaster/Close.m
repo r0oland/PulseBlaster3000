@@ -2,16 +2,16 @@
 % does something coole...
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
-function [] = Close(CT)
+function [] = Close(PB)
   tic;
 
-  if ~isempty(CT.serialPtr) && CT.isConnected
-    CT.VPrintF('[CT] Closing connection to counter...');
-    closePort(CT.serialPtr);
-    CT.serialPtr = [];
-    CT.Done();
+  if ~isempty(PB.serialPtr) && PB.isConnected
+    PB.VPrintF('[Blaster] Closing connection to counter...');
+    closePort(PB.serialPtr);
+    PB.serialPtr = [];
+    PB.Done();
   else
-    CT.VPrintF('[CT] Connection was not open!\n');
+    PB.VPrintF('[Blaster] Connection was not open!\n');
   end
 
 end

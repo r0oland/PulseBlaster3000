@@ -17,9 +17,9 @@ function [success] = Wait_Done(AQ,timeOut)
 
   [~,answer] = AQ.Read_Data(2);
   if answer ~= AQ.DONE
-    short_warn('[CT] unexpected return value:');
+    short_warn('[Blaster] unexpected return value:');
     answer
-    error('[CT] Something went wrong in the teensy!');
+    error('[Blaster] Something went wrong in the teensy!');
   else
     success = true;
   end
