@@ -26,7 +26,7 @@ void setup_nano_delay(uint32_t nanos)
   ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 
   // improve teensy 3.1 clock accuracy
-  OSC0_CR = 0x2;
+  // OSC0_CR = 0x2;
 
   if (nanos < NANO_OVERHEAD) // we can't do less than this
     nanos = NANO_OVERHEAD;

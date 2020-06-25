@@ -131,7 +131,7 @@
                 "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/x10",
                 "c:/Code/PulseBlaster3000/BoardFirmware/include",
                 "c:/Code/PulseBlaster3000/BoardFirmware/src",
-                "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy3",
+                "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy4",
                 "C:/Users/johan/.platformio/packages/tool-unity",
                 ""
             ],
@@ -263,21 +263,21 @@
                     "C:/Users/johan/.platformio/packages/framework-arduinoteensy/libraries/x10",
                     "c:/Code/PulseBlaster3000/BoardFirmware/include",
                     "c:/Code/PulseBlaster3000/BoardFirmware/src",
-                    "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy3",
+                    "C:/Users/johan/.platformio/packages/framework-arduinoteensy/cores/teensy4",
                     "C:/Users/johan/.platformio/packages/tool-unity",
                     ""
                 ]
             },
             "defines": [
                 "PLATFORMIO=40304",
-                "__MK66FX1M0__",
-                "ARDUINO_TEENSY36",
+                "__IMXRT1062__",
+                "ARDUINO_TEENSY41",
                 "TEENSY_OPT_FASTEST_PURE_CODE",
                 "USB_SERIAL",
                 "ARDUINO=10805",
                 "TEENSYDUINO=152",
                 "CORE_TEENSY",
-                "F_CPU=240000000L",
+                "F_CPU=600000000",
                 "LAYOUT_US_ENGLISH",
                 "__PURE_CODE__",
                 ""
@@ -287,9 +287,9 @@
             "compilerPath": "C:/Users/johan/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc.exe",
             "compilerArgs": [
                 "-mthumb",
-                "-mcpu=cortex-m4",
+                "-mcpu=cortex-m7",
                 "-mfloat-abi=hard",
-                "-mfpu=fpv4-sp-d16",
+                "-mfpu=fpv5-d16",
                 "-mpure-code",
                 ""
             ]
