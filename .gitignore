@@ -44,3 +44,5 @@
 *.elf
 
 *.dblite
+
+BoardFirmware/.vscode/
