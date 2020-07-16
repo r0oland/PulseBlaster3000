@@ -1,4 +1,4 @@
-function [] = Disable_Chen_Scope(PB,timeOut)
+function [] = Disable_LMI_Mode(PB,timeOut)
   if nargin == 1
     timeOut = 1; % 5 seconds default timeout
   end
@@ -6,7 +6,7 @@ function [] = Disable_Chen_Scope(PB,timeOut)
 
   % starts recording of the calibration data in the teensy
   PB.PrintF('[Blaster] Disabling scope trigger\n');
-  PB.Write_Command(PB.DISABLE_CHEN_SCOPE);
+  PB.Write_Command(PB.DISABLE_LMI_MODE);
   PB.Wait_Done(timeOut);
   % wait for data to come in...
   t1 = tic();

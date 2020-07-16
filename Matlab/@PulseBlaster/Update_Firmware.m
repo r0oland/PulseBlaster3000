@@ -5,6 +5,9 @@
 function [] = Update_Firmware(Obj)
   % requires Platformio to be installed and to be added to the system path!
   Obj.Hor_Div();
+  if Obj.isConnected
+    Obj.Close();
+  end
   Obj.PrintF('[Blaster] Updating teensy code using Platformio:\n');
   Obj.Close();
   matlabPath = pwd;

@@ -58,8 +58,8 @@ classdef PulseBlaster < BaseHardwareClass
     DISABLE_TRIGGER = uint16(19);
 
     % chen specific commands
-    ENABLE_CHEN_SCOPE = uint16(66);
-    DISABLE_CHEN_SCOPE = uint16(67);
+    ENABLE_LMI_MODE = uint16(66);
+    DISABLE_LMI_MODE = uint16(67);
     ENABLE_CHEN_CASCADE = uint16(68);
     DISABLE_CHEN_CASCADE = uint16(69);
 

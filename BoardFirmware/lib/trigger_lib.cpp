@@ -284,8 +284,8 @@ FASTRUN void TeensyTrigger::chen_scope()
   // firstHalf = do we need to trigger AOD in first or second half of
   // first full trigger period
   // bool firstHalf = (camTrigDelay * 1000 >= triggerPeriod);
-  uint_fast32_t onWait = 0;                 // wait this long, the trigger AOD
-  uint_fast32_t offWait = 0;                // after triggering AOD, wait this long to complete cycle
+  uint_fast32_t onWait = 0;  // wait this long, then trigger AOD
+  uint_fast32_t offWait = 0; // after triggering AOD, wait this long to complete cycle
   const bool firstHalf = (camTrigDelay * 1000) <= triggerPeriod;
   if (firstHalf) // triggerPeriod in ns
   {
@@ -348,6 +348,7 @@ FASTRUN void TeensyTrigger::chen_scope()
       TRIG_OUT_PORT = 0b00000010; // PCO high | AOD LOW
       wait_nano_delay();
     }
+    delayMicroseconds(onWait); // extend camera trigger to match AOD exposure
     TRIG_OUT_PORT = 0b00000000; // all trigger pins low
     triggerCounter++;
     // delay after acq. is done for camera to prepare for next frame
@@ -360,12 +361,11 @@ FASTRUN void TeensyTrigger::chen_scope()
       if (Serial.available() >= 2)
       {
         this->currentCommand = serial_read_16bit_no_wait();
-        if (this->currentCommand == DISABLE_CHEN_SCOPE)
+        if (this->currentCommand == DISABLE_LMI_MODE)
           doTrigger = false;
       }
     }
   } // while (doTrigger)
-
   LED_PORT = 0b00000000; // disable all LEDs
   ledBrightness = 0;
   serial_write_16bit(DONE); // send the "ok, we are done" command

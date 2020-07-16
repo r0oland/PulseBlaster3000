@@ -3,7 +3,7 @@ addpath(p);
 
 if ~exist('PB') %#ok<*EXIST>
   PB = PulseBlaster(false); % create PB object, don't connect yet
-  PB.SERIAL_PORT = 'COM4'; % change from default com port
+  PB.SERIAL_PORT = 'COM3'; % change from default com port
   PB.Connect(); % now connect via serial
 end
 
@@ -12,15 +12,14 @@ end
 
 % PB.Disable_Scope_Mode();
 PB.nPreTrigger = 1;
-PB.prf = 90;              % [Hz] set pulse repetitation or AOD scanning frequency
+PB.prf = 90000;              % [Hz] set pulse repetitation or AOD scanning frequency
 PB.aodTrigger = 9;          % set the devider, camera frame rate = prf/aodTrigge
-PB.postAcqDelay = 1000;     % [us] set the delay after one camera frame 
-PB.camTrigDelay = 900;      % [us] set the delay between AOD and camera trigger
-% PB.Enable_Scope_Mode();     % start triggering
+PB.postAcqDelay = 30;     % [us] set the delay after one camera frame 
+PB.camTrigDelay = 5;      % [us] set the delay between AOD and camera trigger
+PB.Enable_LMI_Mode();     % start triggering
 
 % pause(20); %------- set the triggering time duration -------------
-% PB.Disable_Scope_Mode(); % stop triggering 
-
+% PB.Disable_LMI_Mode(); % stop triggering
 
 
 

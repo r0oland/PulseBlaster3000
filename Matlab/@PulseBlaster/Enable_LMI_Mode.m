@@ -1,4 +1,4 @@
-function [] = Enable_Chen_Scope(PB)
+function [] = Enable_LMI_Mode(PB)
   PB.Flush_Serial();
 
   nPreTrigger = uint32(PB.nPreTrigger);
@@ -10,7 +10,7 @@ function [] = Enable_Chen_Scope(PB)
   PB.PrintF('[Blaster] Enabling free-running trigger @ %2.2fkHz.\n',PB.prf*1e-3);
 
   % SEND actual data to teensy, DO NOT CHANGE ORDER OF THIS
-  PB.Write_Command(PB.ENABLE_CHEN_SCOPE);
+  PB.Write_Command(PB.ENABLE_LMI_MODE);
   PB.Write_32bit(nPreTrigger);
   PB.Write_32bit(nTrigger);
   PB.Write_32bit(triggerFreq);

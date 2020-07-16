@@ -24,8 +24,8 @@ const uint_fast16_t ENABLE_CASCADE = 13; // TODO - same as scope, but triggered 
 const uint_fast16_t TRIGGER_STARTED = 18;
 const uint_fast16_t DISABLE_TRIGGER = 19;
 
-const uint_fast16_t ENABLE_CHEN_SCOPE = 66;
-const uint_fast16_t DISABLE_CHEN_SCOPE = 67;
+const uint_fast16_t ENABLE_LMI_MODE = 66;
+const uint_fast16_t DISABLE_LMI_MODE = 67;
 const uint_fast16_t ENABLE_CHEN_CASCADE = 68;
 const uint_fast16_t DISABLE_CHEN_CASCADE = 69;
 
