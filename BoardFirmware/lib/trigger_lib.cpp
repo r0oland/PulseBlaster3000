@@ -201,6 +201,7 @@ FASTRUN uint_fast8_t TeensyTrigger::check_for_serial_command()
     return 0;
 }
 
+// trigger in simple scope mode, this triggers on all channels (for now...)
 FASTRUN void TeensyTrigger::scope()
 {
   uint_fast32_t lastCommandCheck = 0;
@@ -208,7 +209,6 @@ FASTRUN void TeensyTrigger::scope()
   uint_fast8_t doTrigger = true;
   uint32_t lastTriggerTime = 0;
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // read confing as send from matlab
   uint_fast32_t triggerPeriod = serial_read_32bit(); // trigger period in us
   // trigger how many times? per AOD cycle
@@ -262,7 +262,6 @@ FASTRUN void TeensyTrigger::chen_scope()
   uint_fast32_t triggerCounter = 0;
   uint_fast8_t doTrigger = true;
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // read confing as send from matlab
   // prime card, seems NI needs this
   uint_fast32_t nPreTrigger = serial_read_32bit();
@@ -274,7 +273,6 @@ FASTRUN void TeensyTrigger::chen_scope()
   // camera is triggered slightly later than AOD
   uint_fast32_t camTrigDelay = serial_read_32bit();
 
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // calculate some dependent variables
   uint_fast32_t triggerPeriod = 1 / (triggerFreq * 1E-9);
   ; // trigger period in ns

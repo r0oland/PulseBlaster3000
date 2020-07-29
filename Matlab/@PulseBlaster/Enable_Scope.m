@@ -14,9 +14,9 @@ function [success] = Enable_Scope(PB,nTrigger)
     PB.PrintF('[Blaster] This will cause inacurate trigger frequency!\n');
   end
 
-  triggerPeriod =  uint32(triggerPeriod)
-  trigDuration = uint32(PB.trigDuration) % trigger duration in ns
-  nTrigger =     uint32(nTrigger)
+  triggerPeriod =  uint32(triggerPeriod);
+  trigDuration = uint32(PB.trigDuration); % trigger duration in ns
+  nTrigger =  uint32(nTrigger);
 
 
   % SEND actual data to teensy, DO NOT CHANGE ORDER OF THIS
