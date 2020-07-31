@@ -84,6 +84,11 @@ classdef PulseBlaster < BaseHardwareClass
         doConnect = PB.DO_AUTO_CONNECT;
       end
 
+      if nargin == 1 && ischar(doConnect)
+        PB.SERIAL_PORT = doConnect;
+        doConnect = true;
+      end
+
       if doConnect && ~PB.isConnected
         PB.Connect;
       elseif ~PB.isConnected
