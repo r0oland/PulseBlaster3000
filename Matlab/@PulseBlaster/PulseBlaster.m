@@ -2,6 +2,7 @@
 classdef PulseBlaster < BaseHardwareClass
   % general trigger settings
   properties
+    classId char = '[Trigger]';
     prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
     trigDuration(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 5; % [ns]
   end
@@ -79,34 +80,34 @@ classdef PulseBlaster < BaseHardwareClass
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods
     % constructor, called when class is created
-    function PB = PulseBlaster(doConnect)
+    function Obj = PulseBlaster(doConnect)
       if nargin < 1
-        doConnect = PB.DO_AUTO_CONNECT;
+        doConnect = Obj.DO_AUTO_CONNECT;
       end
 
       if nargin == 1 && ischar(doConnect)
-        PB.SERIAL_PORT = doConnect;
+        Obj.SERIAL_PORT = doConnect;
         doConnect = true;
       end
 
-      if doConnect && ~PB.isConnected
-        PB.Connect;
-      elseif ~PB.isConnected
-        PB.VPrintF('[Blaster] Initialized but not connected yet.\n');
+      if doConnect && ~Obj.isConnected
+        Obj.Connect;
+      elseif ~Obj.isConnected
+        Obj.VPrintF('[Blaster] Initialized but not connected yet.\n');
       end
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    function delete(PB)
-      if ~isempty(PB.serialPtr) && PB.isConnected
-        PB.Close();
+    function delete(Obj)
+      if ~isempty(Obj.serialPtr) && Obj.isConnected
+        Obj.Close();
       end
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % when saved, hand over only properties stored in saveObj
-    function SaveObj = saveobj(PB)
-      SaveObj = CascadeTrigger.empty; % see class def for info
+    function SaveObj = saveobj(Obj)
+      SaveObj = PulseBlaster.empty; % see class def for info
     end
   end
 
@@ -114,51 +115,51 @@ classdef PulseBlaster < BaseHardwareClass
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods % short methods, which are not worth putting in a file
 
-    function [] = Write_16Bit(PB,data)
-      PB.Write_Command(data); % same as command, but lets not confuse our users...
+    function [] = Write_16Bit(Obj,data)
+      Obj.Write_Command(data); % same as command, but lets not confuse our users...
     end
 
-    function [] = Enable_Trigger(PB)
-      PB.Setup_Trigger();
+    function [] = Enable_Trigger(Obj)
+      Obj.Setup_Trigger();
 
-      if PB.Wait_Done()
-        PB.Done();
+      if Obj.Wait_Done()
+        Obj.Done();
         tic;
-        PB.VPrintF('[Blaster] Enabling trigger board...');
-        PB.Write_Command(PB.DO_TRIGGER);
-        PB.Done();
+        Obj.VPrintF('[Blaster] Enabling trigger board...');
+        Obj.Write_Command(Obj.DO_TRIGGER);
+        Obj.Done();
       else
-        PB.Verbose_Warn('[Blaster] Trigger enable failed!\n');
+        Obj.Verbose_Warn('[Blaster] Trigger enable failed!\n');
       end
     end
 
-    function [] = Disable_Trigger(PB)
+    function [] = Disable_Trigger(Obj)
       tic;
-      PB.VPrintF('[Blaster] Disabling trigger board...');
-      PB.Write_Command(PB.STOP_TRIGGER);
-      PB.Done();
+      Obj.VPrintF('[Blaster] Disabling trigger board...');
+      Obj.Write_Command(Obj.STOP_TRIGGER);
+      Obj.Done();
     end
 
-    function [] = Update_Trigger(PB)
-      PB.Disable_Trigger();
-      PB.Enable_Trigger();
+    function [] = Update_Trigger(Obj)
+      Obj.Disable_Trigger();
+      Obj.Enable_Trigger();
     end
 
-    function [] = Flush_Serial(PB)
+    function [] = Flush_Serial(Obj)
       tic;
-      nBytes = PB.bytesAvailable;
+      nBytes = Obj.bytesAvailable;
       if nBytes
-        PB.VPrintF('[Blaster] Flushing %i serial port bytes...',nBytes);
+        Obj.VPrintF('[Blaster] Flushing %i serial port bytes...',nBytes);
         for iByte = 1:nBytes
-          [~] = readPort(PB.serialPtr, 1);
+          [~] = readPort(Obj.serialPtr, 1);
         end
-        PB.Done();
+        Obj.Done();
       end
     end
 
     % --------------------------------------------------------------------------
-    function [slowSampling] = get.slowSampling(PB)
-      if PB.prf > 20
+    function [slowSampling] = get.slowSampling(Obj)
+      if Obj.prf > 20
         % samplingPeriod in us
         slowSampling = false;
       else
@@ -167,13 +168,13 @@ classdef PulseBlaster < BaseHardwareClass
       end
     end
     % --------------------------------------------------------------------------
-    function [samplingPeriod] = get.samplingPeriod(PB)
-      if PB.slowSampling
+    function [samplingPeriod] = get.samplingPeriod(Obj)
+      if Obj.slowSampling
         % samplingPeriod in ms
-        samplingPeriod = uint16(1./PB.prf*1e3);
+        samplingPeriod = uint16(1./Obj.prf*1e3);
       else
         % samplingPeriod in us
-        samplingPeriod = uint16(1./PB.prf*1e6);
+        samplingPeriod = uint16(1./Obj.prf*1e6);
       end
     end
 
@@ -185,10 +186,10 @@ classdef PulseBlaster < BaseHardwareClass
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   methods % set / get methods
-    function [bytesAvailable] = get.bytesAvailable(PB)
-      if PB.isConnected
+    function [bytesAvailable] = get.bytesAvailable(Obj)
+      if Obj.isConnected
         numBytesToRead = 0;
-        [~ , bytesAvailable] = readPort(PB.serialPtr, numBytesToRead);
+        [~ , bytesAvailable] = readPort(Obj.serialPtr, numBytesToRead);
       else
         bytesAvailable = [];
       end
