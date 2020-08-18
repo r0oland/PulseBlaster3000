@@ -3,15 +3,21 @@
 
 #include <Arduino.h> // always required when using platformio
 #include "..\lib\serial_lib.cpp"
-#include "wait.h" // always required when using platformio
 
 // port B (GPIOB_PDOR/GPIOB_PDIR) -> used for trigger input
 const uint8_t TRIG_IN_PINS[] = {16,17};
+
+const uint8_t LED_STRIP_PIN = 19;
 // port C (GPIOC_PDOR/GPIOC_PDIR) -> used for trigger output
 const uint8_t TRIG_OUT_PINS[] = {15,22,23,9,10,13,11,12};
 // port D (GPIOD_PDOR/GPIOD_PDIR) -> used for LED output
 const uint8_t LED_OUT_PINS[] = {2,14,7,8,6,20,21,5};
 
+// LED control -----------------------------------------------------------------
+#include <FastLED.h> 
+void setup_leds();
+void pulse_leds(uint8_t nPulses, uint8_t pulseSpeed);
+void set_led_status(uint8_t status);
 
 // Define serial communication commands (shared with matlab)
 const uint_fast16_t DO_NOTHING = 0;

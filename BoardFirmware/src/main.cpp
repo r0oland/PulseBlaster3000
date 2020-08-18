@@ -5,6 +5,8 @@ TeensyTrigger MyTrig;
 void setup() {
   MyTrig.setup_io_pins();
   setup_serial();
+  setup_leds();
+  pulse_leds(10, 50);
 }
 
 void loop() {
