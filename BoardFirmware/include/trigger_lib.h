@@ -40,6 +40,7 @@ const uint_fast16_t DISABLE_CHEN_CASCADE = 69;
 
 // Responses -------------------------------------------------------------------
 const uint_fast16_t TRIGGER_STARTED = 18;
+const uint_fast16_t CASCADE_STARTED = 19;
 const uint_fast16_t READY_FOR_COMMAND = 98;
 const uint_fast16_t DONE = 99;
 

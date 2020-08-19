@@ -292,18 +292,23 @@ FASTRUN void TeensyTrigger::scope()
   this->currentCommand = DO_NOTHING; // exit state machine
 }
 
+//------------------------------------------------------------------------------
 // start trigger cascade when trigger input changes (both rising and falling)
 FASTRUN void TeensyTrigger::cascade(){
   bool waitForTrigger = true;
+  uint_fast32_t triggerCounter = 0;
+
   // TODO setup led strip based on what is triggered
   // read in trigger scheme (at least what needs to be triggered as mask)
-
+  
+  serial_write_16bit(CASCADE_STARTED); // send the "we are triggering" command
   while(waitForTrigger){
     if (TRIG_IN_1 != lastTrigState){
-      TRIG_OUT_PORT = 0b00001111; // enable triggers
+      TRIG_OUT_PORT = 0b11111111; // enable triggers
       lastTrigState = !lastTrigState;
       delayMicroseconds(1); // trigger on for fixed 1 us for now... 
       TRIG_OUT_PORT = 0b00000000; // disable all trigger
+      triggerCounter++;
     }
 
     // check if we got a new serial command to stop triggering
@@ -320,7 +325,7 @@ FASTRUN void TeensyTrigger::cascade(){
     }
   }
   serial_write_16bit(DONE); // send the "ok, we are done" command
-  // serial_write_32bit(nTrigger);
+  serial_write_32bit(triggerCounter);
   this->currentCommand = DO_NOTHING; // exit state machine
 }
 

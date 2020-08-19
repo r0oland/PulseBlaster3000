@@ -1,4 +1,4 @@
-function [] = Disable_Scope(PB,timeOut)
+function [] = Disable_Cascade(PB,timeOut)
   if nargin == 1
     timeOut = 1; % 5 seconds default timeout
   end
@@ -6,7 +6,7 @@ function [] = Disable_Scope(PB,timeOut)
 
   % starts recording of the calibration data in the teensy
   PB.VPrintF_With_ID('Disabling scope...\n');
-  PB.Write_Command(PB.STOP_TRIGGER);
+  PB.Write_Command(PB.STOP_CASCADE);
   PB.Wait_Done(timeOut);
   % wait for data to come in...
   t1 = tic();

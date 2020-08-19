@@ -6,7 +6,8 @@ function [success] = Enable_Scope(PB,nTrigger)
   PB.Flush_Serial();
   
   freqStr = num2sip(PB.prf);
-  PB.VPrintF_With_ID('Enabling scope @ %s.\n',freqStr);
+  infoStr = sprintf('Enabling scope @ %sHz.\n',freqStr);
+  PB.VPrintF_With_ID(infoStr);
 
   triggerPeriod = round(1./PB.prf.*1e6); % convert to trigger period in us
   if triggerPeriod < 10
@@ -36,7 +37,7 @@ function [success] = Enable_Scope(PB,nTrigger)
   [~,answer] = PB.Read_Data(2);
   if answer ~= PB.TRIGGER_STARTED
     short_warn('[Blaster] unexpected return value:');
-    answer
+    short_warn(sprintf('recieved: %i, expected %i!',answer, PB.TRIGGER_STARTED));
     error('[Blaster] Something went wrong in the teensy!');
   else
     success = true;

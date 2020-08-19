@@ -48,26 +48,27 @@ classdef PulseBlaster < BaseHardwareClass
     DO_AUTO_CONNECT = true; % connect when object is initialized?
     MAX_BYTE_PER_READ = 4096; % we can read this many bytes over serial at once
 
-    %% Comands shared with teensy_lib.h
-    DO_NOTHING = uint16(00);
-
+    %% Comands shared with teensy_lib.h ----------------------------------------
+    DO_NOTHING = uint16(91);
     SET_TRIGGER_CH = uint16(11);
     ENABLE_SCOPE = uint16(12);
-    % TODO - same as scope, but triggered externally...
     ENABLE_CASCADE = uint16(13);
-    TRIGGER_STARTED = uint16(18);
-    DISABLE_TRIGGER = uint16(19);
+    STOP_TRIGGER = PulseBlaster.DO_NOTHING;
+    STOP_SCOPE = PulseBlaster.DO_NOTHING;
+    STOP_CASCADE = PulseBlaster.DO_NOTHING;
+    CHECK_CONNECTION = uint16(97);
 
-    % chen specific commands
+    %% chen specific commands
     ENABLE_LMI_MODE = uint16(66);
     DISABLE_LMI_MODE = uint16(67);
     ENABLE_CHEN_CASCADE = uint16(68);
     DISABLE_CHEN_CASCADE = uint16(69);
 
-    CHECK_CONNECTION = uint16(97);
+    %% Responses shared with teensy_lib.h -------------------------------------
+    TRIGGER_STARTED = uint16(18);
+    CASCADE_STARTED = uint16(19);
     READY_FOR_COMMAND = uint16(98);
     DONE = uint16(99);
-
   end
 
   % same as constant but now showing up as property
