@@ -6,7 +6,7 @@ void setup() {
   MyTrig.setup_io_pins();
   setup_serial();
   setup_leds();
-  pulse_leds(10, 50);
+  set_led_status(0);
 }
 
 void loop() {
@@ -17,11 +17,19 @@ void loop() {
       // -----------------------------------------------------------------------
       case DO_NOTHING:
         MyTrig.do_nothing();
+        set_led_status(0);
         break;
 
       // -----------------------------------------------------------------------
       case ENABLE_SCOPE:
+        set_led_status(1);
         MyTrig.scope();
+        set_led_status(0);
+        break;
+
+      // -----------------------------------------------------------------------
+      case ENABLE_CASCADE:
+        MyTrig.cascade();
         break;
 
       // -----------------------------------------------------------------------

@@ -5,22 +5,22 @@ classdef PulseBlaster < BaseHardwareClass
     classId char = '[Trigger]';
     prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
     trigDuration(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 5; % [ns]
+    SERIAL_PORT = 'COM4';
   end
+
   % chen trigger settings
   properties
     nPreTrigger(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 1; %
     postAcqDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [us]
     camTrigDelay(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 0; % [us]
     aodTrigger(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 9; 
-      % number of AOD triggers per camera trigger  
+    % number of AOD triggers per camera trigger  
 
     daqDelay(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 3;
     camWait(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 4;
     nBaselineWait(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 20;
     nRecordLength(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 40;
     nCycleLength(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 80;
-
-    SERIAL_PORT = 'COM4';
   end
 
   % depended properties are calculated from other properties

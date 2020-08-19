@@ -8,7 +8,7 @@ FASTLED_USING_NAMESPACE
 #define LED_TYPE WS2812
 #define COLOR_ORDER GRB
 #define NUM_LEDS 5 
-#define BRIGHTNESS 128
+#define BRIGHTNESS 20
 CRGB leds[NUM_LEDS]; // contains led info, this we set first, the we call led show
 
 void setup_leds()
@@ -24,13 +24,14 @@ void setup_leds()
   for (int led = 0; led < NUM_LEDS; led++)
   {
     leds[led] = CRGB::White;
-    delay(100);
+    delay(50);
     FastLED.show();
   }
-  delay(100);
-  pulse_leds(3, 5);
+  delay(50);
+  pulse_leds(5, 3);
   FastLED.clear();
   FastLED.show();
+  set_led_status(1);
 }
 
 void pulse_leds(uint8_t nPulses, uint8_t pulseSpeed)
@@ -59,28 +60,27 @@ void pulse_leds(uint8_t nPulses, uint8_t pulseSpeed)
 
 void set_led_status(uint8_t status)
 {
-  // first led in array displays overall status
   // (0 = all good, 1 = working, 2 = error)
+  uint8_t rgb[3] = {0,0,0}; // LED off
   switch (status)
   {
   case 0:
-    leds[0].setRGB(0, 255, 0); // all good = green
-    FastLED.show();
+    rgb[0] = 0; 
+    rgb[1] = 255; 
     break;
   case 1:
-    leds[0].setRGB(200, 165, 0); // working == orange
-    FastLED.show();
+    rgb[0] = 200; 
+    rgb[1] = 165; 
     break;
   case 2:
-    leds[0].setRGB(255, 0, 0); // error == red
-    FastLED.show();
+    rgb[0] = 255; 
     break;
-
   default:
-    leds[0].setRGB(255, 0, 0);
-    FastLED.show();
     break;
   }
+  for (uint8_t iLed = 0; iLed < NUM_LEDS; iLed++)
+    leds[iLed].setRGB(rgb[0], rgb[1], rgb[2]);
+  FastLED.show();
 }
 
 
@@ -214,62 +214,20 @@ void TeensyTrigger::setup_io_pins()
   for (uint8_t i = 0; i < 8; i++)
   {
     pinMode(TRIG_OUT_PINS[i], OUTPUT);
-    pinMode(LED_OUT_PINS[i], OUTPUT);
   }
-  this->show_led_welcome();
-}
-
-// make led blink --------------------------------------------------------------
-void TeensyTrigger::set_all_led_brightness(uint8_t ledPower)
-{
-  for (int iLed = 0; iLed < 5; iLed++)
-  {
-    analogWrite(LED_OUT_PINS[iLed], ledPower);
-  }
-  analogWrite(LED_OUT_PINS[6], ledPower);
 }
 
 // make led blink --------------------------------------------------------------
 void TeensyTrigger::do_nothing()
 {
-  if ((millis() - lastNothingCheck) >= 50)
-  {
-    lastNothingCheck = millis();
-    if ((ledBrightness < 200) && fadeIn)
-      ledBrightness++;
-    else if (ledBrightness == 200)
-    {
-      fadeIn = 0;
-      ledBrightness--;
-    }
-    else if (ledBrightness == 0)
-    {
-      fadeIn = true;
-      ledBrightness++;
-    }
-    else
-      ledBrightness--;
-    set_all_led_brightness(ledBrightness);
-  }
+  // TODO - replace with LED strip based slow breathing
+  // maybe just let case breather and stat LEDs be green?
 }
 
 // make led blink --------------------------------------------------------------
 void TeensyTrigger::show_led_welcome()
 {
-  for (uint8_t i = 0; i < 3; i++)
-  { // blink 3 times
-    for (uint8_t iPower = 0; iPower < 255; iPower++)
-    {
-      this->set_all_led_brightness(iPower);
-      delay(1);
-    }
-    for (uint8_t iPower = 255; iPower > 0; iPower--)
-    {
-      this->set_all_led_brightness(iPower);
-      delay(2);
-    }
-  }
-  LED_PORT = 0b00000000; // disable all LEDs for now
+  // TODO - replace with LED strip based welcome
 }
 
 // check for new command -------------------------------------------------------
@@ -295,7 +253,6 @@ FASTRUN void TeensyTrigger::scope()
 
   // read confing as send from matlab
   uint_fast32_t triggerPeriod = serial_read_32bit(); // trigger period in us
-  // trigger how many times? per AOD cycle
   uint_fast32_t trigOnTime = serial_read_32bit();
   uint_fast32_t nTrigger = serial_read_32bit();
 
@@ -324,24 +281,54 @@ FASTRUN void TeensyTrigger::scope()
       if (Serial.available() >= 2)
       {
         this->currentCommand = serial_read_16bit_no_wait();
-        if (this->currentCommand == DISABLE_TRIGGER)
+        if (this->currentCommand == STOP_SCOPE)
           doTrigger = false;
       }
     }
   } // while (doTrigger)
 
-  LED_PORT = 0b00000000; // disable all LEDs
-  ledBrightness = 0;
   serial_write_16bit(DONE); // send the "ok, we are done" command
   serial_write_32bit(triggerCounter);
   this->currentCommand = DO_NOTHING; // exit state machine
 }
 
+// start trigger cascade when trigger input changes (both rising and falling)
+FASTRUN void TeensyTrigger::cascade(){
+  bool waitForTrigger = true;
+  // TODO setup led strip based on what is triggered
+  // read in trigger scheme (at least what needs to be triggered as mask)
+
+  while(waitForTrigger){
+    if (TRIG_IN_1 != lastTrigState){
+      TRIG_OUT_PORT = 0b00001111; // enable triggers
+      lastTrigState = !lastTrigState;
+      delayMicroseconds(1); // trigger on for fixed 1 us for now... 
+      TRIG_OUT_PORT = 0b00000000; // disable all trigger
+    }
+
+    // check if we got a new serial command to stop triggering
+    // COMMAND_CHECK_INTERVALL is high, so we only check once in a while
+    if ((millis() - lastCommandCheck) >= COMMAND_CHECK_INTERVALL)
+    {
+      lastCommandCheck = millis();
+      if (Serial.available() >= 2)
+      {
+        this->currentCommand = serial_read_16bit_no_wait();
+        if (this->currentCommand == DO_NOTHING)
+          waitForTrigger = false;
+      }
+    }
+  }
+  serial_write_16bit(DONE); // send the "ok, we are done" command
+  // serial_write_32bit(nTrigger);
+  this->currentCommand = DO_NOTHING; // exit state machine
+}
+
+
 
 // custom trigger function for chen to trigger AOD and camera only -------------
 FASTRUN void TeensyTrigger::chen_scope()
 {
-  set_all_led_brightness(0);
   uint_fast32_t lastCommandCheck = 0;
   uint_fast32_t triggerCounter = 0;
   uint_fast8_t doTrigger = true;
@@ -385,7 +372,6 @@ FASTRUN void TeensyTrigger::chen_scope()
   // action
 
   TRIG_OUT_PORT = 0b00000000; // all trigger pins low
-  LED_PORT = 0b01010000;   // enabel Cam and AOD LEDs
 
   // we pre trigger the AOD n-times %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // then we turn on the camera and send out the remaining AOD triggers
@@ -448,8 +434,6 @@ FASTRUN void TeensyTrigger::chen_scope()
       }
     }
   } // while (doTrigger)
-  LED_PORT = 0b00000000; // disable all LEDs
-  ledBrightness = 0;
   serial_write_16bit(DONE); // send the "ok, we are done" command
   serial_write_32bit(triggerCounter);
   this->currentCommand = DO_NOTHING; // exit state machine
@@ -458,7 +442,6 @@ FASTRUN void TeensyTrigger::chen_scope()
 // custom trigger function for chen to trigger AOD and camera only -------------
 FASTRUN void TeensyTrigger::chen_cascade()
 {
-  set_all_led_brightness(0);
   trigOutChMask = 0b00000000;
   uint_fast32_t cycleTrigger = 0;
   uint_fast32_t nCycle = 0;   // keeps track of completed triggering cycles
@@ -482,7 +465,7 @@ FASTRUN void TeensyTrigger::chen_cascade()
   while (waitForTrigger)
   {
     // FIXME - wait for next trigger signal here
-    currentTrigState = TRIG_IN1;
+    currentTrigState = TRIG_IN_1;
     if (currentTrigState != lastTrigState)
     {
       // check for rising flank
@@ -514,12 +497,10 @@ FASTRUN void TeensyTrigger::chen_cascade()
       if (cycleTrigger >= nRecordLength)
       {
         TRIG_OUT_PORT = 0b00001000; // activate block, disable rest
-        LED_PORT = 0b00001000;
       }
       else
       {
         TRIG_OUT_PORT = trigOutChMask;
-        LED_PORT = ledOutMask;
         // writes trigger mask to output port, thus triggers
         delayMicroseconds(trigDuration);
         TRIG_OUT_PORT = 0b00000000;
@@ -551,7 +532,6 @@ FASTRUN void TeensyTrigger::chen_cascade()
       }
     }
   } // while (waitForTrigger)
-  ledBrightness = 0;
   serial_write_16bit(DONE); // send the "ok, we are done" command
   serial_write_32bit(nTrigger);
   serial_write_32bit(nCycle);

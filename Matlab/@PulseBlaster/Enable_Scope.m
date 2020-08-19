@@ -6,18 +6,17 @@ function [success] = Enable_Scope(PB,nTrigger)
   PB.Flush_Serial();
   
   freqStr = num2sip(PB.prf);
-  PB.PrintF('[Blaster] Enabling scope @ %s.\n',freqStr);
+  PB.VPrintF_With_ID('Enabling scope @ %s.\n',freqStr);
 
   triggerPeriod = round(1./PB.prf.*1e6); % convert to trigger period in us
   if triggerPeriod < 10
-    PB.PrintF('[Blaster] Trigger period very low (%i us)!\n',triggerPeriod);
-    PB.PrintF('[Blaster] This will cause inacurate trigger frequency!\n');
+    PB.VPrintF_With_ID('Trigger period very low (%i us)!\n',triggerPeriod);
+    PB.VPrintF_With_ID('This will cause inacurate trigger frequency!\n');
   end
 
   triggerPeriod =  uint32(triggerPeriod);
   trigDuration = uint32(PB.trigDuration); % trigger duration in ns
   nTrigger =  uint32(nTrigger);
-
 
   % SEND actual data to teensy, DO NOT CHANGE ORDER OF THIS
   PB.Write_Command(PB.ENABLE_SCOPE);
