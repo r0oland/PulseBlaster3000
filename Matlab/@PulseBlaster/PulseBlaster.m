@@ -6,6 +6,7 @@ classdef PulseBlaster < BaseHardwareClass
     prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
     trigDuration(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 5; % [ns]
     SERIAL_PORT = 'COM4';
+    mode char = 'onda32'; % used for compatibility
   end
 
   % chen trigger settings
