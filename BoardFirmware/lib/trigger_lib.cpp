@@ -60,26 +60,30 @@ void pulse_leds(uint8_t nPulses, uint8_t pulseSpeed)
 
 void set_led_status(uint8_t status)
 {
-  // (0 = all good, 1 = working, 2 = error)
-  uint8_t rgb[3] = {0,0,0}; // LED off
+  // (0 = all good, 1 = working, 2 = error, 3 = cascade, 4 = scope)
+  CRGB rgb = CRGB::Black; // LED off
   switch (status)
   {
   case 0:
-    rgb[0] = 0; 
-    rgb[1] = 255; 
+    rgb = CRGB::White; 
     break;
   case 1:
-    rgb[0] = 200; 
-    rgb[1] = 165; 
+    rgb = CRGB::Orange; 
     break;
   case 2:
-    rgb[0] = 255; 
+    rgb = CRGB::DarkRed; 
+    break;
+  case 3: // cascade
+    rgb = CRGB::DarkSlateBlue; 
+    break;
+  case 4: // free running / scope mode
+    rgb = CRGB::DarkGreen; 
     break;
   default:
     break;
   }
   for (uint8_t iLed = 0; iLed < NUM_LEDS; iLed++)
-    leds[iLed].setRGB(rgb[0], rgb[1], rgb[2]);
+    leds[iLed] = rgb;
   FastLED.show();
 }
 
@@ -295,11 +299,9 @@ FASTRUN void TeensyTrigger::scope()
 //------------------------------------------------------------------------------
 // start trigger cascade when trigger input changes (both rising and falling)
 FASTRUN void TeensyTrigger::cascade(){
+  TRIG_OUT_PORT = 0b00000000; // make sure we start low...
   bool waitForTrigger = true;
   uint_fast32_t triggerCounter = 0;
-
-  // TODO setup led strip based on what is triggered
-  // read in trigger scheme (at least what needs to be triggered as mask)
   
   serial_write_16bit(CASCADE_STARTED); // send the "we are triggering" command
   while(waitForTrigger){
@@ -318,227 +320,14 @@ FASTRUN void TeensyTrigger::cascade(){
       lastCommandCheck = millis();
       if (Serial.available() >= 2)
       {
-        this->currentCommand = serial_read_16bit_no_wait();
-        if (this->currentCommand == DO_NOTHING)
+        currentCommand = serial_read_16bit_no_wait();
+        if (currentCommand == DO_NOTHING)
           waitForTrigger = false;
       }
     }
   }
+  TRIG_OUT_PORT = 0b00000000; // make sure we end low...
   serial_write_16bit(DONE); // send the "ok, we are done" command
   serial_write_32bit(triggerCounter);
-  this->currentCommand = DO_NOTHING; // exit state machine
-}
-
-
-
-// custom trigger function for chen to trigger AOD and camera only -------------
-FASTRUN void TeensyTrigger::chen_scope()
-{
-  uint_fast32_t lastCommandCheck = 0;
-  uint_fast32_t triggerCounter = 0;
-  uint_fast8_t doTrigger = true;
-
-  // read confing as send from matlab
-  // prime card, seems NI needs this
-  uint_fast32_t nPreTrigger = serial_read_32bit();
-  // trigger how many times? per AOD cycle
-  uint_fast32_t nTrigger = serial_read_32bit();
-  // trigger freq. in Hz
-  uint_fast32_t triggerFreq = serial_read_32bit();
-  uint_fast32_t postAcqDelay = serial_read_32bit();
-  // camera is triggered slightly later than AOD
-  uint_fast32_t camTrigDelay = serial_read_32bit();
-
-  // calculate some dependent variables
-  uint_fast32_t triggerPeriod = 1 / (triggerFreq * 1E-9);
-  ; // trigger period in ns
-  triggerPeriod = triggerPeriod / 2;
-  setup_nano_delay(triggerPeriod);
-
-  // firstHalf = do we need to trigger AOD in first or second half of
-  // first full trigger period
-  // bool firstHalf = (camTrigDelay * 1000 >= triggerPeriod);
-  uint_fast32_t onWait = 0;  // wait this long, then trigger AOD
-  uint_fast32_t offWait = 0; // after triggering AOD, wait this long to complete cycle
-  const bool firstHalf = (camTrigDelay * 1000) <= triggerPeriod;
-  if (firstHalf) // triggerPeriod in ns
-  {
-    onWait = camTrigDelay;
-    offWait = triggerPeriod / 1000 - camTrigDelay;
-  }
-  else
-  {
-    onWait = camTrigDelay - triggerPeriod / 1000;
-    offWait = triggerPeriod / 1000 - onWait;
-  }
-
-  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  // Here we start writing things to the port / trigger outputs and start the
-  // action
-
-  TRIG_OUT_PORT = 0b00000000; // all trigger pins low
-
-  // we pre trigger the AOD n-times %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  // then we turn on the camera and send out the remaining AOD triggers
-  for (uint_fast8_t iTrig = 0; iTrig < nPreTrigger; iTrig++)
-  {
-    TRIG_OUT_PORT = 0b00000100; // AOD HIGH | PCO LOW
-    wait_nano_delay();
-    TRIG_OUT_PORT = 0b00000000; // all low
-    wait_nano_delay();
-  }
-
-  // now we do the actual triggering to acquire data %%%%%%%%%%%%%%%%%%%%%%%%%%%
-  // this might run for eternaty...
-  // we wait 50% of the trigger period on, then of, so we need half the actual period
-  while (doTrigger)
-  {
-    if (firstHalf)
-    {
-      TRIG_OUT_PORT = 0b00000100; // AOD HIGH | PCO LOW
-      delayMicroseconds(onWait);
-      TRIG_OUT_PORT = 0b00000110; // AOD HIGH | PCO HIGH
-      delayMicroseconds(offWait);
-      TRIG_OUT_PORT = 0b00000010; // AOD LOW | PCO HIGH
-      wait_nano_delay();
-    }
-    else
-    {
-      TRIG_OUT_PORT = 0b00000100; // AOD HIGH | PCO LOW
-      wait_nano_delay();
-      TRIG_OUT_PORT = 0b00000000; // AOD LOW | PCO LOW
-      delayMicroseconds(onWait);
-      TRIG_OUT_PORT = 0b00000010; // AOD LOW | PCO HIGH
-      delayMicroseconds(offWait);
-    }
-
-    // we have already triggered once (with a delay, so account for that)
-    uint_fast32_t remainTrigger = nTrigger - 1; 
-    for (uint_fast32_t iTrig = 0; iTrig < remainTrigger; iTrig++)
-    {
-      TRIG_OUT_PORT = 0b00000110; // AOD HIGH | PCO HIGH
-      wait_nano_delay();
-      TRIG_OUT_PORT = 0b00000010; // PCO high | AOD LOW
-      wait_nano_delay();
-    }
-    delayMicroseconds(onWait); // extend camera trigger to match AOD exposure
-    TRIG_OUT_PORT = 0b00000000; // all trigger pins low
-    triggerCounter++;
-    // delay after acq. is done for camera to prepare for next frame
-    delayMicroseconds(postAcqDelay);
-    // check if we got a new serial command to stop triggering
-    // COMMAND_CHECK_INTERVALL is high, so we only check once in a while
-    if ((millis() - lastCommandCheck) >= COMMAND_CHECK_INTERVALL)
-    {
-      lastCommandCheck = millis();
-      if (Serial.available() >= 2)
-      {
-        this->currentCommand = serial_read_16bit_no_wait();
-        if (this->currentCommand == DISABLE_LMI_MODE)
-          doTrigger = false;
-      }
-    }
-  } // while (doTrigger)
-  serial_write_16bit(DONE); // send the "ok, we are done" command
-  serial_write_32bit(triggerCounter);
-  this->currentCommand = DO_NOTHING; // exit state machine
-}
-
-// custom trigger function for chen to trigger AOD and camera only -------------
-FASTRUN void TeensyTrigger::chen_cascade()
-{
-  trigOutChMask = 0b00000000;
-  uint_fast32_t cycleTrigger = 0;
-  uint_fast32_t nCycle = 0;   // keeps track of completed triggering cycles
-  uint_fast32_t nTrigger = 0; // keeps track of triggering during
-  uint_fast8_t currentTrigState = 0;
-  uint_fast8_t lastTrigState = 0;
-  uint_fast8_t waitForTrigger = 1;
-  uint_fast8_t doTrigger = 0;
-  uint_fast32_t lastCommandCheck = 0;
-
-  uint_fast32_t daqDelay = serial_read_32bit();     // for now in us, could be changed
-  uint_fast32_t trigDuration = serial_read_32bit(); // for now in us, could be changed
-  uint_fast32_t camWait = serial_read_32bit();      // trigger cam ever n shots
-  uint_fast32_t nBaselineWait = serial_read_32bit();
-  // wait nshots before starting stimulus
-  uint_fast32_t nRecordLength = serial_read_32bit();
-  // total number of shots for which to record data
-  uint_fast32_t nCycleLength = serial_read_32bit();
-  // total number of shots after which whole cylce starts again
-
-  while (waitForTrigger)
-  {
-    // FIXME - wait for next trigger signal here
-    currentTrigState = TRIG_IN_1;
-    if (currentTrigState != lastTrigState)
-    {
-      // check for rising flank
-      doTrigger = (currentTrigState & !lastTrigState);
-      lastTrigState = currentTrigState;
-    }
-
-    if (doTrigger)
-    {
-      delayMicroseconds(daqDelay);
-      trigOutChMask = 0b00000000;
-      ledOutMask = 0b00000000;
-      trigOutChMask |= (1UL << (DAQ_BIT - 1)); // always enable DAQ trigger pin
-      ledOutMask |= (1UL << (1 - 1));          // first LED on
-      // check if we need to enable camera trigger as well
-      if (cycleTrigger % camWait == 0)
-      {
-        trigOutChMask |= (1UL << (ANDOR_BIT - 1)); // enable cam trigger ever n-shots
-        ledOutMask |= (1UL << (2 - 1));            // 2nd LED on
-      }
-      // check if we need to activate the stimulus trigger
-      if (cycleTrigger == nBaselineWait)
-      {
-        trigOutChMask |= (1UL << (STIM_BIT - 1)); // enable stim trigger
-        ledOutMask |= (1UL << (3 - 1));           // 3rd LED on
-      }
-
-      // check if we need to activate the blocking trigger
-      if (cycleTrigger >= nRecordLength)
-      {
-        TRIG_OUT_PORT = 0b00001000; // activate block, disable rest
-      }
-      else
-      {
-        TRIG_OUT_PORT = trigOutChMask;
-        // writes trigger mask to output port, thus triggers
-        delayMicroseconds(trigDuration);
-        TRIG_OUT_PORT = 0b00000000;
-      }
-
-      // keep track of how often we have triggered
-      if (cycleTrigger == nCycleLength)
-      {
-        cycleTrigger = 0; // disable all triggers here
-        nCycle++;
-      }
-      else
-        cycleTrigger++; // current cylce trigger counter
-
-      nTrigger++; // overall trigger / shot counter
-      // cycleTrigger++; // current cylce trigger counter
-      // check if we got a new serial command to stop triggering
-      // COMMAND_CHECK_INTERVALL is high, so we only check once in a while
-      doTrigger = 0;
-    } // if do trigger
-    if ((millis() - lastCommandCheck) >= COMMAND_CHECK_INTERVALL)
-    {
-      lastCommandCheck = millis();
-      if (Serial.available() >= 2)
-      {
-        this->currentCommand = serial_read_16bit_no_wait();
-        if (this->currentCommand == DISABLE_CHEN_CASCADE)
-          waitForTrigger = false;
-      }
-    }
-  } // while (waitForTrigger)
-  serial_write_16bit(DONE); // send the "ok, we are done" command
-  serial_write_32bit(nTrigger);
-  serial_write_32bit(nCycle);
-  this->currentCommand = DO_NOTHING; // exit state machine
+  currentCommand = DO_NOTHING; // exit state machine
 }

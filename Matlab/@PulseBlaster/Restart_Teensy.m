@@ -3,15 +3,15 @@
 % Johannes Rebling, (johannesrebling@gmail.com), 2019
 
 function [] = Restart_Teensy(Obj)
-  Obj.PrintF('Restarting microcontroller, this takes a few seconds...\n');
+  Obj.PrintF('Restarting teensy MCU, this takes a second...\n');
   if Obj.isConnected
     Obj.Close();
   end
-  cmd1 = sprintf('$port= new-Object System.IO.Ports.SerialPort %s,134,None,8,one',...
-    Obj.SERIAL_PORT);
-  cmd2 = '$port.open()';
-  cmd3 = '$port.Close()';
-  fullCmd = sprintf('powershell %s; %s; %s',cmd1, cmd2, cmd3);
+  % requires tycmd tool located at the following path...
+  % download at https://github.com/Koromix/tytools 
+  cmd1 = sprintf('C:\\Code\\TyTools\\tycmd.exe reset --board=%s',...
+    Obj.TEENSY_ID);
+  fullCmd = sprintf('powershell %s',cmd1);
 
   [status] = system(fullCmd); % sends restart command
   pause(0.25); % give matlab a chance to check what is going on, i.e. port is missing
@@ -32,7 +32,7 @@ function [] = Restart_Teensy(Obj)
     Obj.PrintF('\n\n');
     short_warn('Restart failed:');
   else
-    Obj.PrintF('Microcontroller restarted successfully!\n');
+    Obj.PrintF('Teensy restarted successfully!\n');
   end
 
 end

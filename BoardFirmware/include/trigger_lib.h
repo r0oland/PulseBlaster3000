@@ -21,7 +21,8 @@ void set_led_status(uint8_t status);
 
 // Define serial communication commands and responses (shared with matlab) %%%%%
 // Commands -------------------------------------------------------------------
-const uint_fast16_t DO_NOTHING = 91; // used to end all trigger modes
+const uint_fast16_t STOP = 93; // used to end all trigger modes
+const uint_fast16_t DO_NOTHING = STOP; // used to end all trigger modes
 // this way we can send one command and we are reasonably sure we get back to
 // the default state...
 const uint_fast16_t SET_TRIGGER_CH = 11;

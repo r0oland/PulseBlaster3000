@@ -5,7 +5,7 @@ function [] = Disable_Cascade(PB,timeOut)
   PB.Flush_Serial();
 
   % starts recording of the calibration data in the teensy
-  PB.VPrintF_With_ID('Disabling scope...\n');
+  PB.VPrintF_With_ID('Disabling cascade trigger: ');
   PB.Write_Command(PB.STOP_CASCADE);
   PB.Wait_Done(timeOut);
   % wait for data to come in...
@@ -19,5 +19,5 @@ function [] = Disable_Cascade(PB,timeOut)
   end
   [byteData,~] = PB.Read_Data(4); % get 32 bit trigger counter value
   PB.lastTrigCount = double(typecast(byteData,'uint32'));
-  PB.VPrintF_With_ID('Triggered %i times!\n',PB.lastTrigCount);
+  PB.VPrintF('Triggered %i times!\n',PB.lastTrigCount);
 end

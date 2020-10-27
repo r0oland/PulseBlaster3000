@@ -5,7 +5,8 @@ classdef PulseBlaster < BaseHardwareClass
     classId char = '[Trigger]';
     prf(1,1) {mustBeInteger,mustBeNonnegative,mustBeFinite} = 100; % [HZ]
     trigDuration(1,1) uint32 {mustBeInteger,mustBeNonnegative,mustBeFinite} = 5; % [ns]
-    SERIAL_PORT = 'COM4';
+    SERIAL_PORT = COM_Ports.Trigger;
+    TEENSY_ID =  COM_Ports.TriggerId;
     mode char = 'onda32'; % used for compatibility
   end
 
@@ -50,7 +51,8 @@ classdef PulseBlaster < BaseHardwareClass
     MAX_BYTE_PER_READ = 4096; % we can read this many bytes over serial at once
 
     %% Comands shared with teensy_lib.h ----------------------------------------
-    DO_NOTHING = uint16(91);
+    STOP = uint16(93);
+    DO_NOTHING = PulseBlaster.STOP;
     SET_TRIGGER_CH = uint16(11);
     ENABLE_SCOPE = uint16(12);
     ENABLE_CASCADE = uint16(13);

@@ -5,7 +5,7 @@ function [] = Disable_Scope(PB,timeOut)
   PB.Flush_Serial();
 
   % starts recording of the calibration data in the teensy
-  PB.VPrintF_With_ID('Disabling scope...\n');
+  PB.VPrintF_With_ID('Disabling scope: ');
   PB.Write_Command(PB.STOP_TRIGGER);
   PB.Wait_Done(timeOut);
   % wait for data to come in...
