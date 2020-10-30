@@ -299,16 +299,28 @@ FASTRUN void TeensyTrigger::scope()
 //------------------------------------------------------------------------------
 // start trigger cascade when trigger input changes (both rising and falling)
 FASTRUN void TeensyTrigger::cascade(){
+  // send the "we are triggering" command
+  serial_write_16bit(CASCADE_STARTED); 
+
+  // send trigger duration in microseconds
+  uint_fast32_t trigOnTime = serial_read_32bit(); // [us]
+  
+  // send the "we are triggering" command again
+  serial_write_16bit(CASCADE_STARTED); 
+
   TRIG_OUT_PORT = 0b00000000; // make sure we start low...
   bool waitForTrigger = true;
   uint_fast32_t triggerCounter = 0;
   
-  serial_write_16bit(CASCADE_STARTED); // send the "we are triggering" command
   while(waitForTrigger){
     if (TRIG_IN_1 != lastTrigState){
       TRIG_OUT_PORT = 0b11111111; // enable triggers
       lastTrigState = !lastTrigState;
-      delayMicroseconds(1); // trigger on for fixed 1 us for now... 
+      // our trigger signal is blocking and 20 us is just short enough to allow
+      // for max trigger rate of 50 kHz, so we miss triggers here if the
+      // trigger input is faster than that
+      // delayMicroseconds(20); 
+      delayMicroseconds(trigOnTime);
       TRIG_OUT_PORT = 0b00000000; // disable all trigger
       triggerCounter++;
     }

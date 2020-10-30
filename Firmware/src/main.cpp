@@ -1,3 +1,5 @@
+#define FASTLED_ALLOW_INTERRUPTS 0
+
 #include "..\lib\trigger_lib.cpp"
 
 TeensyTrigger MyTrig;

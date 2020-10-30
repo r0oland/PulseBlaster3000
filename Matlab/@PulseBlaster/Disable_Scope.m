@@ -1,6 +1,6 @@
 function [] = Disable_Scope(PB,timeOut)
   if nargin == 1
-    timeOut = 1; % 5 seconds default timeout
+    timeOut = 3; % 5 seconds default timeout
   end
   PB.Flush_Serial();
 
@@ -8,7 +8,7 @@ function [] = Disable_Scope(PB,timeOut)
   PB.VPrintF_With_ID('Disabling scope: ');
   PB.Write_Command(PB.STOP_TRIGGER);
   PB.Wait_Done(timeOut);
-  % wait for data to come in...
+  wait for data to come in...
   t1 = tic();
   while (PB.bytesAvailable<4)
     if toc(t1) > timeOut

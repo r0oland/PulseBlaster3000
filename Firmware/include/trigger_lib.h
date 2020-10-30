@@ -60,7 +60,7 @@ constexpr uint_fast8_t FAST_CAM_BIT = 2; // ch 6
 #define ALL_TRIGGER_LOW GPIOC_PDOR = 0b00000000; //
 #define ALL_LED_HIGH GPIOD_PDOR = 0b11111111; //
 #define ALL_LED_LOW GPIOD_PDOR = 0b00000000; //
-#define ENABLE_1234 GPIOC_PDOR =  (GPIOC_PDOR & 0b00100111 ) | 0b11011000
+#define ENABLE_1234 GPIOC_PDOR =  (GPIOC_PDOR & 0b00100111 ) | 0b11011000 
   // enables trigger outputs 1 (bit 8), 2 (bit 7), 3 (bit 5) and 4 (bit 4)
   // should not affect the other bits (needs to be tested!)
 #define DISABLE_1234 GPIOC_PDOR = (GPIOC_PDOR & 0b00100111 ) | 0b00000000
@@ -92,7 +92,7 @@ class TeensyTrigger {
     // FASTRUN void execute_serial_command();
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // variables for analog & digital temperature measurements
-    const uint_fast16_t COMMAND_CHECK_INTERVALL = 200; // [ms] wait this long before checking for serial
+    const uint_fast16_t COMMAND_CHECK_INTERVALL = 1000; // [ms] wait this long before checking for serial
 
     uint8_t trigOutChMask = 0b00000000;
     uint8_t ledOutMask = 0b00000000;

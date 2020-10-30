@@ -72,6 +72,8 @@ classdef PulseBlaster < BaseHardwareClass
     CASCADE_STARTED = uint16(19);
     READY_FOR_COMMAND = uint16(98);
     DONE = uint16(99);
+
+    MCU_BOOT_TIME = 1; % teensy boots fast...
   end
 
   % same as constant but now showing up as property
@@ -153,7 +155,7 @@ classdef PulseBlaster < BaseHardwareClass
       tic;
       nBytes = Obj.bytesAvailable;
       if nBytes
-        Obj.VPrintF('[Blaster] Flushing %i serial port bytes...',nBytes);
+        Obj.VPrintF_With_ID('Flushing %i serial port bytes...',nBytes);
         for iByte = 1:nBytes
           [~] = readPort(Obj.serialPtr, 1);
         end

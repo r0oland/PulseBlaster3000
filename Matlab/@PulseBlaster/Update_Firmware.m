@@ -8,10 +8,13 @@ function [] = Update_Firmware(Obj)
   if Obj.isConnected
     Obj.Close();
   end
-  Obj.PrintF('[Blaster] Updating teensy code using Platformio:\n');
+  Obj.VPrintF_With_ID('Updating code using Platformio:\n');
   Obj.Close();
-  matlabPath = pwd;
-  cd ..\BoardFirmware\;
+  % path stuff to reliably move to firmware path
+  thisFilePath = mfilename('fullpath');
+  targetPath = fileparts(thisFilePath);
+  matlabPath = cd(targetPath);
+  cd ../../Firmware; % two paths "up" we find the firmware path
   Obj.PrintF('Compiling and uploading,this might take a few seconds...\n');
   % run power shell, compile and upload using platformio (needs to be correctly installed)
   Obj.PrintF('\n\n');
@@ -25,7 +28,9 @@ function [] = Update_Firmware(Obj)
     Obj.PrintF('\n\nUploading firmware was a big success!\n');
   end
   cd(matlabPath); % return to original path
-  pause(1); % wait a second for teensy to start back up...
+  Obj.PrintF('Waiting for MCU to boot up again...');
+  pause(Obj.MCU_BOOT_TIME); % wait a second for teensy to start back up...
   Obj.Connect();
+  Obj.Flush_Serial();
   Obj.Hor_Div();
 end
