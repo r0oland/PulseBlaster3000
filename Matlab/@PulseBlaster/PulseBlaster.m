@@ -98,6 +98,7 @@ classdef PulseBlaster < BaseHardwareClass
 
       if doConnect && ~Obj.isConnected
         Obj.Connect;
+        Obj.Check_Connection();
       elseif ~Obj.isConnected
         Obj.VPrintF('[Blaster] Initialized but not connected yet.\n');
       end
